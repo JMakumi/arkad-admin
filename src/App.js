@@ -36,12 +36,20 @@ const App = () => {
     setDarkMode(!darkMode);
   };
 
+  const detectDesktopMode = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /mobile|android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    const isDesktopViewport = window.innerWidth >= 1024;
+    setIsDesktop(!isMobile || isDesktopViewport);
+  };
+
   useEffect(() => {
+    detectDesktopMode();
+
     const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1024); // 1024px is the typical breakpoint for desktop
+      detectDesktopMode();
     };
 
-    handleResize(); // Check on mount
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
