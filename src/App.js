@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { FaTrophy, FaTasks, FaImages, FaHandsHelping, FaDonate, FaUserFriends, FaHandshake, FaNewspaper, FaEnvelope, FaMoon, FaSun } from 'react-icons/fa';
+import { FaTrophy, FaTasks, FaImages, FaHandsHelping, FaDonate, FaUserFriends, FaHandshake, FaNewspaper, FaEnvelope } from 'react-icons/fa';
 import Home from './Home';
 import Achievements from './Achievements';
 import Activities from './Activities';
@@ -21,7 +21,6 @@ import './App.css';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [isDesktop, setIsDesktop] = useState(true);
 
   const handleLogin = () => {
@@ -30,10 +29,6 @@ const App = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-  };
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
   };
 
   const detectDesktopMode = () => {
@@ -67,12 +62,12 @@ const App = () => {
 
   return (
     <Router>
-      <div className={darkMode ? "dark" : ""}>
-        <div className={`flex min-h-screen ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+      <div>
+        <div className="flex min-h-screen bg-white text-gray-900">
           {isAuthenticated ? (
             <>
               {/* Sidebar */}
-              <aside className={`bg-${darkMode ? 'gray-900' : '[#006D5B]'} text-white w-64 min-h-screen p-4 sm:w-20 md:w-64`}>
+              <aside className="bg-[#006D5B] text-white w-64 min-h-screen p-4 sm:w-20 md:w-64">
                 <div className="flex flex-col items-center">
                   <img
                     src={logo}
@@ -120,12 +115,6 @@ const App = () => {
                       <FaNewspaper className="text-xl" />
                       <span className="hidden md:inline">Newsletter</span>
                     </Link>
-                    <button onClick={toggleDarkMode} className="mt-8 px-4 py-2 rounded hover:bg-opacity-70 flex items-center justify-center">
-                      {darkMode ? <FaSun className="text-yellow-500" /> : <FaMoon className="text-gray-500" />}
-                      <span className="ml-2 hidden md:inline">
-                        {darkMode ? "Light Mode" : "Dark Mode"}
-                      </span>
-                    </button>
                     <button onClick={handleLogout} className="mt-4 bg-red-600 px-4 py-2 rounded hover:bg-red-800">
                       Logout
                     </button>
