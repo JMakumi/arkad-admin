@@ -1,61 +1,42 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaTrophy, FaTasks, FaImages, FaHandsHelping, FaDonate, FaUserFriends, FaHandshake, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
-import logo from './images/logo.png';
+import React, { useEffect, useState } from 'react';
+import happy from './images/happy.jpg';
+import future from './images/future.jpg';
+import impact from './images/impact.jpg';
+import team from './images/team.jpg';
+import memories from './images/memories.jpg';
 
 const Home = () => {
-  return (
-    <div className="flex">
-      <aside className="bg-[#006D5B] text-white w-64 min-h-screen p-4 hidden sm:block">
-        <div className="flex flex-col items-center">
-          <img src={logo} alt="Organization Logo" className="h-20 mb-8" />
-          <nav className="flex flex-col space-y-4">
-            <Link to="/achievements" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaTrophy />
-              <span className="hidden md:inline">Achievements</span>
-            </Link>
-            <Link to="/activities" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaTasks />
-              <span className="hidden md:inline">Activities</span>
-            </Link>
-            <Link to="/media" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaImages />
-              <span className="hidden md:inline">Media</span>
-            </Link>
-            <Link to="/volunteer" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaHandsHelping />
-              <span className="hidden md:inline">Volunteer</span>
-            </Link>
-            <Link to="/donation" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaDonate />
-              <span className="hidden md:inline">Donation</span>
-            </Link>
-            <Link to="/membership" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaUserFriends />
-              <span className="hidden md:inline">Membership</span>
-            </Link>
-            <Link to="/partnership" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaHandshake />
-              <span className="hidden md:inline">Partnership</span>
-            </Link>
-            <Link to="/contact" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaPhoneAlt />
-              <span className="hidden md:inline">Contact</span>
-            </Link>
-            <Link to="/communication" className="flex items-center space-x-2 hover:text-[#FFD700]">
-              <FaEnvelope />
-              <span className="hidden md:inline">Communication</span>
-            </Link>
-          </nav>
-        </div>
-      </aside>
+  const images = [
+    { src: happy, message: 'Let us cherish the happy moments we create through our actions and continue to spread joy in everything we do.' },
+    { src: future, message: 'The future is bright. Let us persist in our pursuit for a better tomorrow, driven by hope and determination.' },
+    { src: impact, message: 'Every effort we make leaves a mark. Together, we create a lasting impact for the betterment of the Arkad Family.' },
+    { src: team, message: 'United we stand. As a strong and united team, we can achieve the vision of the Arkad Family.' },
+    { src: memories, message: 'Our past is filled with fond memories. These stories propel us to continue the work we do, driven by passion and purpose.' },
+  ];
 
-      <main className="flex-1 p-8">
-        <h1 className="text-2xl font-bold text-[#006D5B]">Welcome to the Home Page</h1>
-        <p className="mt-4">
-          Select an option from the sidebar to get started.
+  // Randomly select a background image and its corresponding message on component load
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    const randomImage = images[Math.floor(Math.random() * images.length)];
+    setSelectedImage(randomImage);
+  }, []);
+
+  if (!selectedImage) return null; // Avoid rendering if no image is selected
+
+  return (
+    <div
+      className="min-h-screen flex justify-center items-center bg-cover bg-center text-white"
+      style={{ backgroundImage: `url(${selectedImage.src})` }}
+    >
+      <div className="bg-black bg-opacity-50 p-8 rounded-lg shadow-lg max-w-lg text-center">
+        <p className="text-2xl font-bold mb-4">
+          {selectedImage.message}
         </p>
-      </main>
+        <p className="font-semibold">
+          Your journey here begins with a commitment to growth and a passion for making a difference.
+        </p>
+      </div>
     </div>
   );
 };

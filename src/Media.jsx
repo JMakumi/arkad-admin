@@ -1,88 +1,77 @@
 import React, { useState } from 'react';
-import tree from './images/tree_planting.jpg';
-import children from './images/happy_children.jpg';
-import mentorship from './images/mentorship.jpg';
-
-const mediaData = [
-  {
-    id: 1,
-    image: children,
-    description: 'Children enjoying a retreat organized by Arkad SMP.',
-  },
-  {
-    id: 2,
-    image: tree,
-    description: 'Tree planting event at Karura Forest.',
-  },
-  {
-    id: 3,
-    image: mentorship,
-    description: 'Youth mentorship session in Naivasha, Kenya.',
-  },
-  {
-    id: 4,
-    image: tree,
-    description: 'Another tree planting event.',
-  },
-  {
-    id: 5,
-    image: children,
-    description: 'More children enjoying the retreat.',
-  },
-];
+import { useDropzone } from 'react-dropzone';
+import { FaUpload } from 'react-icons/fa';
 
 const Media = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = window.innerWidth >= 768 ? 3 : 1; // 3 items per page on larger screens, 1 item on smaller screens
-  const totalPages = Math.ceil(mediaData.length / itemsPerPage);
+  const [image, setImage] = useState(null);
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState('');
 
-  const currentItems = mediaData.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const onDrop = (acceptedFiles) => {
+    const file = acceptedFiles[0];
 
-  const goToPage = (pageIndex) => {
-    setCurrentPage(pageIndex);
+    if (file.size > 400 * 1024) {
+      setError('Image must be less than 400KB.');
+      return;
+    }
+
+    setImage(URL.createObjectURL(file));
+    setError('');
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: 'image/*',
+    maxFiles: 1
+  });
+
+  const handleSubmit = () => {
+    if (!description || !image) {
+      setError('Please enter a description and upload an image.');
+      return;
+    }
+
+    // Handle form submission logic here
+    console.log({ description, image });
+    setError('');
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-4xl font-bold text-[#006D5B] mb-8 text-center">Media Gallery</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentItems.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white shadow-lg rounded-lg overflow-hidden"
-          >
-            <div className="relative">
-              <img
-                src={item.image}
-                alt={item.description}
-                className="w-full h-60 object-cover transform transition-transform hover:scale-105"
-              />
-              <div
-                className="absolute bottom-0 bg-white text-[#006D5B] px-4 py-2 rounded-t-lg"
-                style={{
-                  width: '80%', 
-                  left: '10%', 
-                }}
-              >
-                <p className="text-center text-sm">{item.description}</p>
-              </div>
-            </div>
+    <div className="p-8">
+      <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">Add Media</h1>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      
+      <div className="image-upload mb-4" {...getRootProps()}>
+        <input {...getInputProps()} />
+        <div className="upload-content text-center p-4 border-dashed border-2 border-[#006D5B] rounded">
+          <FaUpload className="text-[#006D5B] text-2xl mb-2" />
+          <p className="text-[#006D5B]">Drag & drop your image here, or click to select it (Max: 400KB).</p>
+        </div>
+        {image && (
+          <div className="uploaded-image mt-4">
+            <img src={image} alt="Preview" className="w-32 h-32 object-cover border rounded mx-auto" />
           </div>
-        ))}
+        )}
       </div>
-      <div className="flex justify-center mt-6">
-        {Array.from({ length: totalPages }).map((_, pageIndex) => (
-          <button
-            key={pageIndex}
-            onClick={() => goToPage(pageIndex)}
-            className={`mx-2 px-4 py-2 rounded-full ${currentPage === pageIndex ? 'bg-[#FFD700] text-white' : 'bg-gray-300 text-gray-700'} transition-colors`}
-          >
-            {pageIndex + 1}
-          </button>
-        ))}
+
+      <div className="form-fields">
+        <div className="mb-4">
+          <label htmlFor="description" className="block text-[#006D5B] mb-2">Description</label>
+          <textarea
+            id="description"
+            value={description}
+            placeholder='Description'
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-2 border border-[#006D5B] rounded"
+            rows="4"
+          />
+        </div>
+        <button
+          onClick={handleSubmit}
+          className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40]"
+        >
+          Submit
+        </button>
       </div>
     </div>
   );
