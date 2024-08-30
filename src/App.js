@@ -97,7 +97,7 @@ const App = () => {
                     </Link>
                     <Link to="/membership" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
                       <FaUserFriends className="text-xl" />
-                      <span className="hidden md:inline">Membership</span>
+                      <span className="hidden md:inline">Membership Requests</span>
                     </Link>
                     <Link to="/members" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
                       <FaUserFriends className="text-xl" />
