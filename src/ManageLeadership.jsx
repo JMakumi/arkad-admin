@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import imageCompression from 'browser-image-compression';
-import image from './images/test.jpg'; // Dummy image path
+import image from './images/test.jpg';
 
 const ManageLeadership = () => {
   const [leadership, setLeadership] = useState([]);
