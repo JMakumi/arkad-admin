@@ -1,47 +1,60 @@
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
 
 const Achievements = () => {
-  const [images, setImages] = useState([]);
+  const [image, setImage] = useState(null);
   const [description, setDescription] = useState('');
   const [venue, setVenue] = useState('');
   const [date, setDate] = useState('');
   const [error, setError] = useState('');
+  const [compressedSize, setCompressedSize] = useState(null);
 
-  const onDrop = (acceptedFiles) => {
-    if (acceptedFiles.length > 2) {
-      setError('You can only upload up to 2 images.');
+  const onDrop = async (acceptedFiles) => {
+    if (acceptedFiles.length > 1) {
+      setError('You can only upload one image.');
       return;
     }
 
-    const files = acceptedFiles.map(file => {
-      if (file.size > 400 * 1024) {
-        setError('Each image must be less than 400KB.');
-        return null;
-      }
-      return URL.createObjectURL(file);
-    }).filter(Boolean);
+    const file = acceptedFiles[0];
+    if (file.size > 400 * 1024) {
+      try {
+        const options = {
+          maxSizeMB: 0.4, // The target size is 0.4MB (400KB)
+          maxWidthOrHeight: 1920,
+          useWebWorker: true
+        };
 
-    if (files.length > 0) {
-      setImages(files);
+        const compressedFile = await imageCompression(file, options);
+        const compressedUrl = URL.createObjectURL(compressedFile);
+        setImage(compressedUrl);
+        setCompressedSize(compressedFile.size);
+        setError('');
+      } catch (error) {
+        setError('Failed to compress the image.');
+      }
+    } else {
+      const url = URL.createObjectURL(file);
+      setImage(url);
+      setCompressedSize(file.size);
       setError('');
     }
   };
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: 'image/*',
-    maxFiles: 2
+    accept: 'image/jpeg, image/jpg, image/png',
+    maxFiles: 1,
   });
 
   const handleSubmit = () => {
-    if (!description || !venue || !date || images.length === 0) {
-      setError('Please fill out all fields and upload images.');
+    if (!description || !venue || !date || !image) {
+      setError('Please fill out all fields and upload an image.');
       return;
     }
     // Handle form submission logic here
-    console.log({ description, venue, date, images });
+    console.log({ description, venue, date, image });
     setError('');
   };
 
@@ -53,13 +66,14 @@ const Achievements = () => {
         <input {...getInputProps()} />
         <div className="upload-content text-center p-4 border-dashed border-2 border-[#006D5B] rounded">
           <FaUpload className="text-[#006D5B] text-2xl mb-2" />
-          <p className="text-[#006D5B]">Drag & drop your images here, or click to select them.</p>
+          <p className="text-[#006D5B]">Drag & drop your image here, or click to select it.</p>
         </div>
-        <div className="uploaded-images mt-4 flex space-x-4">
-          {images.map((img, index) => (
-            <img key={index} src={img} alt={`Preview ${index}`} className="w-32 h-32 object-cover border rounded" />
-          ))}
-        </div>
+        {image && (
+          <div className="uploaded-image mt-4">
+            <img src={image} alt="Preview" className="w-32 h-32 object-cover border rounded" />
+            <p className="text-sm text-gray-500">Compressed size: {(compressedSize / 1024).toFixed(2)} KB</p>
+          </div>
+        )}
       </div>
       <div className="form-fields">
         <div className="mb-4">

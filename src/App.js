@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { FaTrophy, FaTasks, FaImages, FaHandsHelping, FaDonate, FaUserFriends, FaHandshake, FaNewspaper, FaEnvelope } from 'react-icons/fa';
+import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
+import { 
+  FaTrophy, 
+  FaTasks, 
+  FaImages, 
+  FaHandsHelping, 
+  FaDonate, 
+  FaUserPlus, 
+  FaUserShield, 
+  FaUserTie, 
+  FaEnvelope, 
+  FaNewspaper,
+  FaHandshake,
+  FaUserFriends,
+  FaUserSecret, // For Arkad Leadership
+  FaCogs // For Manage Leadership
+} from 'react-icons/fa';
 import Home from './Home';
 import Achievements from './Achievements';
 import Activities from './Activities';
@@ -16,6 +30,11 @@ import Newsletter from './Newsletter';
 import LandingPage from './LandingPage';
 import Login from './Login';
 import Signup from './Signup';
+import ManageAchievements from './ManageAchievements';
+import ManageActivities from './ManageActivities';
+import ManageMedia from './ManageMedia';
+import Leadership from './Leadership';
+import ManageLeadership from './ManageLeadership';
 import logo from './images/logo.png';
 import './App.css';
 
@@ -75,7 +94,7 @@ const App = () => {
                     className="h-20 mb-8 w-auto sm:h-12 sm:mb-4"
                   />
                   <nav className="flex flex-col space-y-4">
-                    <Link to="/achievements" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                  <Link to="/achievements" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
                       <FaTrophy className="text-xl" />
                       <span className="hidden md:inline">Achievements</span>
                     </Link>
@@ -95,12 +114,28 @@ const App = () => {
                       <FaDonate className="text-xl" />
                       <span className="hidden md:inline">Donation</span>
                     </Link>
+                    <Link to="/signup" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaUserPlus className="text-xl" />
+                      <span className="hidden md:inline">Create New User</span>
+                    </Link>
                     <Link to="/membership" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
                       <FaUserFriends className="text-xl" />
                       <span className="hidden md:inline">New Members</span>
                     </Link>
+                    <Link to="/manage-achievements" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaUserShield className="text-xl" />
+                      <span className="hidden md:inline">Manage Achievements</span>
+                    </Link>
+                    <Link to="/manage-activities" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaTasks className="text-xl" />
+                      <span className="hidden md:inline">Manage Activities</span>
+                    </Link>
+                    <Link to="/manage-media" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaImages className="text-xl" />
+                      <span className="hidden md:inline">Manage Media</span>
+                    </Link>
                     <Link to="/members" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
-                      <FaUserFriends className="text-xl" />
+                      <FaUserTie className="text-xl" />
                       <span className="hidden md:inline">Arkad Family</span>
                     </Link>
                     <Link to="/partnership-request" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
@@ -115,6 +150,17 @@ const App = () => {
                       <FaNewspaper className="text-xl" />
                       <span className="hidden md:inline">Newsletter</span>
                     </Link>
+                    
+                    {/* New Links */}
+                    <Link to="/arkad-leadership" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaUserSecret className="text-xl" />
+                      <span className="hidden md:inline">Arkad Leadership</span>
+                    </Link>
+                    <Link to="/manage-leadership" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaCogs className="text-xl" />
+                      <span className="hidden md:inline">Manage Leadership</span>
+                    </Link>
+
                     <button onClick={handleLogout} className="mt-4 bg-red-600 px-4 py-2 rounded hover:bg-red-800">
                       Logout
                     </button>
@@ -125,18 +171,23 @@ const App = () => {
               {/* Main Content */}
               <main className="flex-1 p-8">
                 <Routes>
-                  <Route path="/working" element={<Home />} />
+                <Route path="/working" element={<Home />} />
                   <Route path="/achievements" element={<Achievements />} />
                   <Route path='/activities' element={<Activities />} />
                   <Route path='/media' element={<Media />} />
                   <Route path='/volunteer' element={<Volunteer />} />
                   <Route path='/donation' element={<Donations />} />
                   <Route path='/membership' element={<Membership />} />
+                  <Route path='/manage-achievements' element={<ManageAchievements />} />
+                  <Route path='/manage-activities' element={<ManageActivities />} />
+                  <Route path='/manage-media' element={<ManageMedia />} />
                   <Route path='/members' element={<Members />} />
                   <Route path='/partnership-request' element={<Partners />} />
                   <Route path='/messages' element={<ContactUs />} />
                   <Route path='/newsletter' element={<Newsletter />} />
-                  {/* Add other routes as needed */}
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/arkad-leadership" element={<Leadership />} />
+                  <Route path="/manage-leadership" element={<ManageLeadership />} />
                 </Routes>
               </main>
             </>
@@ -145,7 +196,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                <Route path="/signup" element={<Signup />} />
+                
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
             </div>

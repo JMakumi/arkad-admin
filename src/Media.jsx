@@ -1,38 +1,59 @@
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
+import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
 
 const Media = () => {
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [compressedSizes, setCompressedSizes] = useState([]);
 
-  const onDrop = (acceptedFiles) => {
-    const file = acceptedFiles[0];
+  const onDrop = async (acceptedFiles) => {
+    let compressedImages = [];
+    let sizes = [];
 
-    if (file.size > 400 * 1024) {
-      setError('Image must be less than 400KB.');
-      return;
+    for (let file of acceptedFiles) {
+      if (file.size > 400 * 1024) {
+        try {
+          const options = {
+            maxSizeMB: 0.4, // Target size of 0.4MB (400KB)
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+
+          const compressedFile = await imageCompression(file, options);
+          compressedImages.push(URL.createObjectURL(compressedFile));
+          sizes.push(compressedFile.size);
+        } catch (error) {
+          setError('Failed to compress one or more images.');
+          return;
+        }
+      } else {
+        compressedImages.push(URL.createObjectURL(file));
+        sizes.push(file.size);
+      }
     }
 
-    setImage(URL.createObjectURL(file));
+    setImages([...images, ...compressedImages]);
+    setCompressedSizes([...compressedSizes, ...sizes]);
     setError('');
   };
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: 'image/*',
-    maxFiles: 1
+    accept: 'image/jpeg, image/jpg, image/png',
+    maxFiles: 10,
   });
 
   const handleSubmit = () => {
-    if (!description || !image) {
-      setError('Please enter a description and upload an image.');
+    if (!description || images.length === 0) {
+      setError('Please enter a description and upload at least one image.');
       return;
     }
 
     // Handle form submission logic here
-    console.log({ description, image });
+    console.log({ description, images });
     setError('');
   };
 
@@ -45,13 +66,16 @@ const Media = () => {
         <input {...getInputProps()} />
         <div className="upload-content text-center p-4 border-dashed border-2 border-[#006D5B] rounded">
           <FaUpload className="text-[#006D5B] text-2xl mb-2" />
-          <p className="text-[#006D5B]">Drag & drop your image here, or click to select it (Max: 400KB).</p>
+          <p className="text-[#006D5B]">Drag & drop up to 10 images here, or click to select them (Max: 400KB per image).</p>
         </div>
-        {image && (
-          <div className="uploaded-image mt-4">
-            <img src={image} alt="Preview" className="w-32 h-32 object-cover border rounded mx-auto" />
-          </div>
-        )}
+        <div className="uploaded-images mt-4 grid grid-cols-2 gap-4">
+          {images.map((img, index) => (
+            <div key={index} className="uploaded-image">
+              <img src={img} alt={`Preview ${index + 1}`} className="w-32 h-32 object-cover border rounded mx-auto" />
+              <p className="text-sm text-gray-500 text-center">Size: {(compressedSizes[index] / 1024).toFixed(2)} KB</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="form-fields">

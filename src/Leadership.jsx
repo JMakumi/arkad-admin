@@ -3,11 +3,11 @@ import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
 
-const Activities = () => {
+const Leadership = () => {
   const [image, setImage] = useState(null);
-  const [title, setTitle] = useState('');
-  const [venue, setVenue] = useState('');
-  const [date, setDate] = useState('');
+  const [role, setRole] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [compressedSize, setCompressedSize] = useState(null);
 
@@ -45,19 +45,19 @@ const Activities = () => {
   });
 
   const handleSubmit = () => {
-    if (!title || !venue || !date || !image) {
+    if (!role || !description || !image) {
       setError('Please fill out all fields and upload an image.');
       return;
     }
 
     // Handle form submission logic here
-    console.log({ title, venue, date, image });
+    console.log({ role, description, image });
     setError('');
   };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">Add Activity</h1>
+      <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">Add Leadership</h1>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       
       <div className="image-upload mb-4" {...getRootProps()}>
@@ -76,35 +76,38 @@ const Activities = () => {
 
       <div className="form-fields">
         <div className="mb-4">
-          <label htmlFor="title" className="block text-[#006D5B] mb-2">Title</label>
+          <label htmlFor="name" className="block text-[#006D5B] mb-2">Name</label>
           <input
-            id="title"
+            id="name"
             type="text"
-            placeholder='Title'
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            placeholder='Name'
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             className="w-full p-2 border border-[#006D5B] rounded"
+            required
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="venue" className="block text-[#006D5B] mb-2">Venue</label>
+          <label htmlFor="role" className="block text-[#006D5B] mb-2">Role</label>
           <input
-            id="venue"
+            id="role"
             type="text"
-            placeholder='Venue'
-            value={venue}
-            onChange={(e) => setVenue(e.target.value)}
+            placeholder='Role'
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
             className="w-full p-2 border border-[#006D5B] rounded"
+            required
           />
         </div>
         <div className="mb-4">
-          <label htmlFor="date" className="block text-[#006D5B] mb-2">Date</label>
-          <input
-            id="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+          <label htmlFor="description" className="block text-[#006D5B] mb-2">Description</label>
+          <textarea
+            id="description"
+            placeholder='Description'
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             className="w-full p-2 border border-[#006D5B] rounded"
+            required
           />
         </div>
         <button
@@ -118,4 +121,4 @@ const Activities = () => {
   );
 };
 
-export default Activities;
+export default Leadership;

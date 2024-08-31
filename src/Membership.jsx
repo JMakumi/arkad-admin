@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { FaEllipsisH } from 'react-icons/fa';
 
 const Membership = () => {
   const [members, setMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [declineReason, setDeclineReason] = useState('');
   const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showActions, setShowActions] = useState(null);
   const modalRef = useRef(null);
+  const actionsRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const response = await axios.get('https://localhost:4000/membership');
-        // const data = response.data;
-
         // Dummy data since the endpoint is not available
         const data = [
           { id: 1, firstName: "John", middleName: null, lastName: "Doe", email: "johndoe@example.com", gender: "male", location: "Nairobi", age: 24, nationality: "Kenyan", memberNumber: "A-0001-2024", reason: "Reason" },
@@ -34,7 +34,7 @@ const Membership = () => {
     try {
       await axios.put(`https://localhost:4000/membership/${id}`, { status: 'approved' });
       alert('Membership approved!');
-      // Update the members list or handle the UI accordingly
+      setShowActions(null); // Close the actions overlay
     } catch (error) {
       console.error('Error approving membership:', error);
     }
@@ -43,13 +43,13 @@ const Membership = () => {
   const handleDecline = (member) => {
     setSelectedMember(member);
     setShowDeclineModal(true);
+    setShowActions(null); // Close the actions overlay
   };
 
   const handleSubmitDecline = async () => {
     try {
       await axios.put(`https://localhost:4000/membership/${selectedMember.id}`, { status: 'declined', reason: declineReason });
       alert('Membership declined!');
-      // Update the members list or handle the UI accordingly
       setShowDeclineModal(false);
     } catch (error) {
       console.error('Error declining membership:', error);
@@ -60,10 +60,14 @@ const Membership = () => {
     if (modalRef.current && !modalRef.current.contains(event.target)) {
       setShowDeclineModal(false);
     }
+
+    if (actionsRef.current && !actionsRef.current.contains(event.target)) {
+      setShowActions(null);
+    }
   };
 
   useEffect(() => {
-    if (showDeclineModal) {
+    if (showDeclineModal || showActions !== null) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -72,7 +76,7 @@ const Membership = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showDeclineModal]);
+  }, [showDeclineModal, showActions]);
 
   return (
     <div className="p-8">
@@ -102,19 +106,30 @@ const Membership = () => {
               <td className="py-2 px-4 border">{member.age}</td>
               <td className="py-2 px-4 border">{member.nationality}</td>
               <td className="py-2 px-4 border">{member.memberNumber}</td>
-              <td className="py-2 px-4 border">
-                <button
-                  onClick={() => handleApprove(member.id)}
-                  className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40] mr-2"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleDecline(member)}
-                  className="bg-red-600 text-white p-2 rounded hover:bg-red-700"
-                >
-                  Decline
-                </button>
+              <td className="py-2 px-4 border relative">
+                <FaEllipsisH
+                  onClick={() => setShowActions(showActions === member.id ? null : member.id)}
+                  className="cursor-pointer text-gray-600 hover:text-gray-800"
+                />
+                {showActions === member.id && (
+                  <div
+                    ref={actionsRef}
+                    className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10"
+                  >
+                    <button
+                      onClick={() => handleApprove(member.id)}
+                      className="block w-full text-left p-2 hover:bg-[#004d40] hover:text-white"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleDecline(member)}
+                      className="block w-full text-left p-2 hover:bg-red-600 hover:text-white"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                )}
               </td>
             </tr>
           ))}
@@ -122,7 +137,7 @@ const Membership = () => {
       </table>
 
       {showDeclineModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
           <div ref={modalRef} className="bg-white p-6 rounded shadow-lg">
             <h2 className="text-xl font-bold mb-4">Decline Membership</h2>
             <p className="mb-4">Please provide a reason for declining the membership of {selectedMember.firstName} {selectedMember.lastName}.</p>
