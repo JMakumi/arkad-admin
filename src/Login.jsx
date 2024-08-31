@@ -1,23 +1,69 @@
 import React, { useState } from 'react';
+import axios from "axios"
+import CryptoJS from 'crypto-js';
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate, NavLink } from 'react-router-dom';
+
+const secretKey = process.env.REACT_APP_SECRET_KEY;
+const LOGIN_URL="https://arkad-server.onrender.com/users/login";
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const hardcodedEmail = 'user@example.com';
-  const hardcodedPassword = 'password123';
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email === hardcodedEmail && password === hardcodedPassword) {
-      alert('Login successful!');
-      onLogin();  // Update authentication state
-      navigate('/working');
-    } else {
-      alert('Invalid email or password');
+    if(!email || !password){
+      return;
     }
+    setLoading(true);
+
+    
+    try {
+      const dataToEncrypt = {
+        username: email,
+        password: password
+      };
+  
+      const dataStr = JSON.stringify(dataToEncrypt);
+      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
+        iv: CryptoJS.enc.Hex.parse(iv),
+        padding: CryptoJS.pad.Pkcs7,
+        mode: CryptoJS.mode.CBC
+      }).toString();
+
+      const payload = {
+        iv: iv,
+        ciphertext: encryptedData
+      };
+
+      const response = await axios.post(LOGIN_URL, payload);
+      if(response.data.success){
+        onLogin();
+        navigate('/working');
+        const decodedToken = jwtDecode(response.data.accessToken);
+        const userDetails = {
+            id: decodedToken.id,
+            username: decodedToken.username
+          };
+        localStorage.setItem("userData", JSON.stringify(userDetails));
+        localStorage.setItem("accessToken", JSON.stringify(response.data.accessToken));
+      }else{
+        setError(response.data.message);
+        setTimeout(() => setError(""), 5000);
+        return;
+      }
+  } catch (error) {
+    setError("There was an error loging in", error);
+    setTimeout(() => setError(""), 5000);
+    return;
+  }finally{
+    setLoading(false);
+  }
   };
 
   return (
@@ -50,15 +96,18 @@ const Login = ({ onLogin }) => {
             />
           </div>
           <div className="mb-6 text-center">
-            <NavLink to="/signup" className="text-[#006D5B] hover:underline">
-              Don't have an account? Sign up here.
+            <NavLink to="/forgot-password" className="text-[#006D5B] hover:underline">
+              Forgot your password?
             </NavLink>
           </div>
+          {error && (
+            <div className="text-red-500 mt-2 text-sm text-center">{error}</div>
+          )}
           <button
             type="submit"
             className="w-full bg-[#006D5B] text-white py-3 px-4 rounded hover:bg-[#005946] transition duration-200"
           >
-            Login
+            {loading ? 'Submitting...' : 'Submit'}
           </button>
         </form>
       </div>

@@ -3,7 +3,7 @@ import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
-const SIGNUP_URL="http://localhost:3050/users/signup";
+const SIGNUP_URL="https://arkad-server.onrender.com/users/signup";
 const Signup = () => {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -44,13 +44,6 @@ const Signup = () => {
 
       const response = await axios.post(SIGNUP_URL, payload);
 
-      console.log(response.data.message);
-      if(response.data.message === "There was an error making your request. Error: AxiosError: Request failed with status code 409"){
-        setError(response.data.message);
-        setTimeout(() => setError(""),5000);
-        return;
-      }
-
       if(response.data.success){
         setSuccess(response.data.message);
         setTimeout(()=>setSuccess(""),5000);
@@ -65,6 +58,11 @@ const Signup = () => {
       };
       
     } catch (error) {
+      if (error.message === "Request failed with status code 409"){
+        setError("Username already exist");
+        setTimeout(() => setError(""),5000);
+        return;
+      }
       setError(`There was an error making your request. Error: ${error}`);
       setTimeout(() => setError(""),5000);
     }finally{
