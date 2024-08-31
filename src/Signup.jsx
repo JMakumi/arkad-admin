@@ -72,8 +72,9 @@ const Signup = () => {
   };
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-center text-[#006D5B] mb-6">Create New User</h1>
+    <div className="min-h-screen flex justify-center items-center bg-white">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h1 className="text-3xl font-bold mb-8 text-center text-[#006D5B]">Create New User</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-gray-700 font-bold mb-2" htmlFor="email">Email</label>
@@ -121,12 +122,13 @@ const Signup = () => {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-[#006D5B] hover:bg-teal-900 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="w-full bg-[#006D5B] text-white py-3 px-4 rounded hover:bg-[#005946] transition duration-200"
           >
             {loading ? 'Submitting...' : 'Submit'}
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 };

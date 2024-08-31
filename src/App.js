@@ -13,8 +13,9 @@ import {
   FaNewspaper,
   FaHandshake,
   FaUserFriends,
-  FaUserSecret, // For Arkad Leadership
-  FaCogs // For Manage Leadership
+  FaUserSecret, 
+  FaCogs,
+  FaKey 
 } from 'react-icons/fa';
 import Home from './Home';
 import Achievements from './Achievements';
@@ -35,6 +36,8 @@ import ManageActivities from './ManageActivities';
 import ManageMedia from './ManageMedia';
 import Leadership from './Leadership';
 import ManageLeadership from './ManageLeadership';
+import ForgotPassword from './ForgotPassword';
+import ChangePassword from './ChangePassword';
 import logo from './images/logo.png';
 import './App.css';
 
@@ -48,6 +51,8 @@ const App = () => {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userData');
   };
 
   const detectDesktopMode = () => {
@@ -58,6 +63,14 @@ const App = () => {
   };
 
   useEffect(() => {
+    // Check if accessToken and userData are stored in the browser
+    const storedAccessToken = localStorage.getItem('accessToken');
+    const storedUserData = localStorage.getItem('userData');
+
+    if (storedAccessToken && storedUserData) {
+      setIsAuthenticated(true);
+    }
+
     detectDesktopMode();
 
     const handleResize = () => {
@@ -160,6 +173,11 @@ const App = () => {
                       <FaCogs className="text-xl" />
                       <span className="hidden md:inline">Manage Leadership</span>
                     </Link>
+                    <Link to="/change-password" className="flex items-center justify-center sm:justify-center md:justify-start space-x-2 hover:text-[#FFD700]">
+                      <FaKey className="text-xl" />
+                      <span className="hidden md:inline">Change Password</span>
+                    </Link>
+
 
                     <button onClick={handleLogout} className="mt-4 bg-red-600 px-4 py-2 rounded hover:bg-red-800">
                       Logout
@@ -188,6 +206,7 @@ const App = () => {
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/arkad-leadership" element={<Leadership />} />
                   <Route path="/manage-leadership" element={<ManageLeadership />} />
+                  <Route path="/change-password" element={<ChangePassword />} />
                 </Routes>
               </main>
             </>
@@ -196,7 +215,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
             </div>
