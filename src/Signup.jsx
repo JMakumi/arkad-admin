@@ -11,7 +11,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-8 shadow-md rounded-lg">
+    <div className="p-8">
       <h1 className="text-2xl font-bold text-center text-[#006D5B] mb-6">Create New User</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -19,6 +19,7 @@ const Signup = () => {
           <input
             type="email"
             id="email"
+            placeholder='johndoe@example.com'
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -30,6 +31,7 @@ const Signup = () => {
           <input
             type="text"
             id="firstName"
+            placeholder='John'
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -41,6 +43,7 @@ const Signup = () => {
           <input
             type="text"
             id="lastName"
+            placeholder='Doe'
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -51,7 +54,7 @@ const Signup = () => {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-[#006D5B] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="bg-[#006D5B] hover:bg-teal-900 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Submit
           </button>
