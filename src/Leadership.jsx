@@ -7,7 +7,6 @@ const Leadership = () => {
   const [image, setImage] = useState(null);
   const [role, setRole] = useState('');
   const [name, setName] = useState("");
-  const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [compressedSize, setCompressedSize] = useState(null);
 
@@ -17,7 +16,7 @@ const Leadership = () => {
     if (file.size > 400 * 1024) {
       try {
         const options = {
-          maxSizeMB: 0.4, // Target size of 0.4MB (400KB)
+          maxSizeMB: 0.4, 
           maxWidthOrHeight: 1920,
           useWebWorker: true
         };
@@ -45,13 +44,12 @@ const Leadership = () => {
   });
 
   const handleSubmit = () => {
-    if (!role || !description || !image) {
+    if (!role || !name || !image) {
       setError('Please fill out all fields and upload an image.');
       return;
     }
 
-    // Handle form submission logic here
-    console.log({ role, description, image });
+    console.log({ role, name, image });
     setError('');
   };
 
@@ -95,17 +93,6 @@ const Leadership = () => {
             placeholder='Role'
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full p-2 border border-[#006D5B] rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="description" className="block text-[#006D5B] mb-2">Description</label>
-          <textarea
-            id="description"
-            placeholder='Description'
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
             className="w-full p-2 border border-[#006D5B] rounded"
             required
           />

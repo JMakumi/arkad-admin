@@ -8,6 +8,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.5",
     "browser-image-compression": "^2.0.2",
+    "crypto-js": "^4.2.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.3.31",
     "ics": "^3.7.6",
