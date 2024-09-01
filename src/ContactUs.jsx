@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const MESSAGES_URL = "https://arkad-server.onrender.com/users/messages"
+const MESSAGES_URL = "https://arkad-server.onrender.com/users/message"
+const key = process.env.ENCRYPTION_KEY;
 
 const ContactUs = () => {
   const [messages, setMessages] = useState([]);
@@ -15,6 +16,7 @@ const ContactUs = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!token) return;
+      if (!key) return;
       try {
         const response = await axios.get(MESSAGES_URL,{
           headers: {
@@ -23,9 +25,17 @@ const ContactUs = () => {
         });
 
         if(response.data.success){
-          const ciphertext = response.data.ciphertext;
-          const iv = response.data.iv
-          setMessages();
+          const ciphertext = response.data.data.ciphertext;
+          const iv = response.data.data.iv;
+
+          const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
+            iv: CryptoJS.enc.Hex.parse(iv),
+            padding: CryptoJS.pad.Pkcs7,
+            mode: CryptoJS.mode.CBC,
+          });
+          let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+          decryptedData = decryptedData.replace(/\0+$/, '');
+          setMessages(JSON.parse(decryptedData));
         }
 
         setMessages();
