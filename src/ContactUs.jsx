@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js'; 
-import Modal from './Modal'; 
 
 const MESSAGES_URL = "https://arkad-server.onrender.com/users/message";
 const key = process.env.REACT_APP_SECRET_KEY;
