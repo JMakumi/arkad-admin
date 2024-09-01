@@ -7,7 +7,7 @@ const key = process.env.REACT_APP_SECRET_KEY;
 
 const ContactUs = () => {
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);  // Start with loading set to true
   const [token, setToken] = useState("");
 
   useEffect(() => {
@@ -16,12 +16,13 @@ const ContactUs = () => {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    if (token) {
+      fetchData();
+    }
   }, [token]);
 
   const fetchData = async () => {
     if (!token || !key) return;
-    setLoading(true); 
     try {
       const response = await axios.get(MESSAGES_URL, {
         headers: {
@@ -46,26 +47,34 @@ const ContactUs = () => {
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
-      setLoading(false); 
+      setLoading(false);  // Set loading to false after the data is fetched
     }
   };
 
   const handleMarkAsRead = async (id) => {
-    setLoading(true); 
+    if (!token || !id) return;
+    
+    // Temporarily hide the message
+    const updatedMessages = messages.filter(msg => msg.id !== id);
+    setMessages(updatedMessages);
+
     try {
-      const response = await axios.put(`${MESSAGES_URL}/${id}`, {
+      const response = await axios.put(`${MESSAGES_URL}/${id}`, { status: "read" }, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
       });
-      if (response.data.success) {
-      } else {
-        alert(response.data.message);
+
+      if (!response.data.success) {
+        // If the request fails, re-add the message back to the list
+        const originalMessage = messages.find(msg => msg.id === id);
+        setMessages([...updatedMessages, originalMessage]);
       }
     } catch (error) {
-      alert("Error", error);
-    } finally {
-      setLoading(false); 
+      console.error("Error marking as read:", error);
+      // On error, re-add the message back to the list
+      const originalMessage = messages.find(msg => msg.id === id);
+      setMessages([...updatedMessages, originalMessage]);
     }
   };
 

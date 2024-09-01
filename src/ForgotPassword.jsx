@@ -80,6 +80,11 @@ const ForgotPassword = () => {
           {success && (
             <div className="text-green-600 mt-2 text-sm text-center">{success}</div>
           )}
+          <div className="mb-6 text-center">
+            <NavLink to="/login" className="text-[#006D5B] hover:underline">
+              Go to login page?
+            </NavLink>
+          </div>
           <button
             type="submit"
             className="w-full bg-[#006D5B] text-white py-3 px-4 rounded hover:bg-[#005946] transition duration-200"
@@ -87,11 +92,7 @@ const ForgotPassword = () => {
           >
             {loading ? 'Submitting...' : 'Submit'}
           </button>
-          <div className="mb-6 text-center">
-            <NavLink to="/login" className="text-[#006D5B] hover:underline">
-              Go to login page?
-            </NavLink>
-          </div>
+          
         </form>
       </div>
     </div>
