@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 const FORGOT_PASSWORD_URL = "https://arkad-server.onrender.com/users/reset-password";
@@ -87,6 +87,11 @@ const ForgotPassword = () => {
           >
             {loading ? 'Submitting...' : 'Submit'}
           </button>
+          <div className="mb-6 text-center">
+            <NavLink to="/login" className="text-[#006D5B] hover:underline">
+              Go to login page?
+            </NavLink>
+          </div>
         </form>
       </div>
     </div>
