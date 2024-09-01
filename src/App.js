@@ -44,7 +44,6 @@ import './App.css';
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isDesktop, setIsDesktop] = useState(true);
-  const navigate = Navigate()
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -54,7 +53,6 @@ const App = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userData');
-    navigate("/");
   };
 
   const detectDesktopMode = () => {
@@ -218,7 +216,7 @@ const App = () => {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login onLogin={handleLogin} />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="*" element={<Navigate to="/working" />} />
+                <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
             </div>
           )}
