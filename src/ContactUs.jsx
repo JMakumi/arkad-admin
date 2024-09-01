@@ -1,52 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const MESSAGES_URL = "https://arkad-server.onrender.com/users/messages"
+
 const ContactUs = () => {
   const [messages, setMessages] = useState([]);
+  const [token, setToken] = useState("");
+
+  useEffect(()=>{
+    const storedAccessToken = localStorage.getItem('accessToken');
+    if(storedAccessToken) setToken(JSON.parse(storedAccessToken))
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) return;
       try {
-        // const response = await axios.get('https://localhost:4000/contact-us');
-        // const data = response.data;
-
-        // Dummy data since the endpoint is not available
-        const data = [
-          {
-            id: 1,
-            fullName: "John Doe",
-            email: "johndoe@example.com",
-            phoneNumber: "0747800714",
-            message: "message",
-            status: "unread"
-          },
-          {
-            id: 2,
-            fullName: "Jane Smith",
-            email: "janesmith@example.com",
-            phoneNumber: "0747800725",
-            message: "Another message",
-            status: "unread"
-          },
-          {
-            id: 3,
-            fullName: "Michael Johnson",
-            email: "michaelj@example.com",
-            phoneNumber: "0747800736",
-            message: "Yet another message",
-            status: "unread"
-          },
-          {
-            id: 4,
-            fullName: "Emily Davis",
-            email: "emilyd@example.com",
-            phoneNumber: "0747800747",
-            message: "Final message",
-            status: "unread"
+        const response = await axios.get(MESSAGES_URL,{
+          headers: {
+            Authorization: `Bearer ${token}`,
           }
-        ];
+        });
 
-        setMessages(data);
+        if(response.data.success){
+          const ciphertext = response.data.ciphertext;
+          const iv = response.data.iv
+          setMessages();
+        }
+
+        setMessages();
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
