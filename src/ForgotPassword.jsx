@@ -3,7 +3,7 @@ import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
-const FORGOT_PASSWORD_URL = "https://arkad-server.onrender.com/users/forgot-password";
+const FORGOT_PASSWORD_URL = "https://arkad-server.onrender.com/users/reset-password";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
