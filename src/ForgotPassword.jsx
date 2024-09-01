@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import { useNavigate } from 'react-router-dom';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 const FORGOT_PASSWORD_URL = "https://arkad-server.onrender.com/users/reset-password";
@@ -10,6 +11,7 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ const ForgotPassword = () => {
 
     try {
       const dataToEncrypt = {
-        email: email
+        username: email
       };
 
       const dataStr = JSON.stringify(dataToEncrypt);
@@ -42,6 +44,7 @@ const ForgotPassword = () => {
       if (response.data.success) {
         setSuccess("New password has been sent to your email");
         setTimeout(() => setSuccess(""), 15000);
+        navigate('/login');
       } else {
         setError(response.data.message);
         setTimeout(() => setError(""), 5000);

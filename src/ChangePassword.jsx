@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
-import { useNavigate } from 'react-router-dom';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
 const CHANGE_PASSWORD_URL = "https://arkad-server.onrender.com/users/change-password";
@@ -15,11 +14,11 @@ const ChangePassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [token, setToken] = useState("");
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState("");
 
   useEffect(()=>{
     const storedAccessToken = localStorage.getItem('accessToken');
-    if(storedAccessToken) setToken(storedAccessToken)
+    if(storedAccessToken) setToken(JSON.parse(storedAccessToken))
   }, [])
 
   const validatePassword = (password) => {
@@ -61,21 +60,28 @@ const ChangePassword = () => {
     e.preventDefault();
     if (!email || !newPassword || !confirmPassword) {
       setError('Please fill in all fields.');
+      setTimeout(() => setError(""), 5000);
       return;
     }
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match.');
+      setTimeout(() => setError(""), 5000);
       return;
     }
     if (passwordError) {
       setError('Please meet all password requirements.');
+      setTimeout(() => setError(""), 5000);
       return;
     }
+    if (!token) return;
 
     setLoading(true);
+    const dataToEncrypt={
+      username: email,
+      password: newPassword
+    };
 
     try {
-      const dataToEncrypt = { email, newPassword };
       const dataStr = JSON.stringify(dataToEncrypt);
       const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
       const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
@@ -93,9 +99,14 @@ const ChangePassword = () => {
       });
 
       if (response.data.success) {
-        navigate('/success');
+        setEmail("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setSuccess(response.data.message);
+        setTimeout(() => setSuccess(""), 5000)
       } else {
         setError(response.data.message);
+        setTimeout(() => setError(""), 5000);
       }
     } catch (err) {
       setError('There was an error changing your password.');
@@ -148,6 +159,7 @@ const ChangePassword = () => {
             />
           </div>
           {error && <div className="text-red-500 mt-2 text-sm text-center">{error}</div>}
+          {success && (<div className="text-green-600 mt-2 text-sm text-center">{success}</div>)}
           <button
             type="submit"
             className="w-full bg-[#006D5B] text-white py-3 px-4 rounded hover:bg-[#005946] transition duration-200"
