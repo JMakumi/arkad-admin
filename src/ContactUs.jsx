@@ -7,7 +7,7 @@ const key = process.env.REACT_APP_SECRET_KEY;
 
 const ContactUs = () => {
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);  // Start with loading set to true
+  const [loading, setLoading] = useState(true);  
   const [token, setToken] = useState("");
 
   useEffect(() => {

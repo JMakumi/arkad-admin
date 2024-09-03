@@ -1,37 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
+import axios from 'axios';
+import CryptoJS from 'crypto-js';
+
+const MEDIA_URL = "https://arkad-server.onrender.com/users/media";
+const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 const Media = () => {
   const [images, setImages] = useState([]);
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [compressedSizes, setCompressedSizes] = useState([]);
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState("");
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const storedAccessToken = localStorage.getItem('accessToken');
+    const userData = localStorage.getItem("userData");
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
+    if (userData) setUserId(JSON.parse(userData).id);
+  }, []);
 
   const onDrop = async (acceptedFiles) => {
     let compressedImages = [];
     let sizes = [];
 
     for (let file of acceptedFiles) {
-      if (file.size > 400 * 1024) {
-        try {
+      try {
+        let compressedFile;
+        if (file.size > 400 * 1024) {
           const options = {
-            maxSizeMB: 0.4, // Target size of 0.4MB (400KB)
+            maxSizeMB: 0.4,
             maxWidthOrHeight: 1920,
             useWebWorker: true,
           };
-
-          const compressedFile = await imageCompression(file, options);
-          compressedImages.push(URL.createObjectURL(compressedFile));
-          sizes.push(compressedFile.size);
-        } catch (error) {
-          setError('Failed to compress one or more images.');
-          return;
+          const compressedBlob = await imageCompression(file, options);
+          compressedFile = new File([compressedBlob], file.name, { type: file.type, lastModified: Date.now() });
+        } else {
+          compressedFile = file;
         }
-      } else {
-        compressedImages.push(URL.createObjectURL(file));
-        sizes.push(file.size);
+        compressedImages.push(compressedFile);
+        sizes.push(compressedFile.size);
+      } catch (error) {
+        setError('Failed to compress one or more images.');
+        return;
       }
     }
 
@@ -46,15 +62,58 @@ const Media = () => {
     maxFiles: 10,
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!description || images.length === 0) {
       setError('Please enter a description and upload at least one image.');
       return;
     }
+    if (!token || !secretKey || !userId) return;
 
-    // Handle form submission logic here
-    console.log({ description, images });
-    setError('');
+    setLoading(true);
+
+    try {
+      const dataToEncrypt = {
+        description,
+        userId,
+      };
+
+      const dataStr = JSON.stringify(dataToEncrypt);
+      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
+        iv: CryptoJS.enc.Hex.parse(iv),
+        padding: CryptoJS.pad.Pkcs7,
+        mode: CryptoJS.mode.CBC,
+      }).toString();
+
+      const payload = new FormData();
+      payload.append("iv", iv);
+      payload.append("ciphertext", encryptedData);
+
+      images.forEach((image) => {
+        payload.append('images', image); 
+      });
+      
+
+      const response = await axios.post(MEDIA_URL, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        setSuccess(response.data.message);
+        setDescription('');
+        setImages([]);
+        setCompressedSizes([]);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      setError('There was an error submitting your data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,7 +130,7 @@ const Media = () => {
         <div className="uploaded-images mt-4 grid grid-cols-2 gap-4">
           {images.map((img, index) => (
             <div key={index} className="uploaded-image">
-              <img src={img} alt={`Preview ${index + 1}`} className="w-32 h-32 object-cover border rounded mx-auto" />
+              <img src={URL.createObjectURL(img)} alt={`Preview ${index + 1}`} className="w-32 h-32 object-cover border rounded mx-auto" />
               <p className="text-sm text-gray-500 text-center">Size: {(compressedSizes[index] / 1024).toFixed(2)} KB</p>
             </div>
           ))}
@@ -94,9 +153,10 @@ const Media = () => {
           onClick={handleSubmit}
           className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40]"
         >
-          Submit
+          {loading ? "Sending..." : "Submit"}
         </button>
       </div>
+      {success && <p className="text-green-600 mt-4">{success}</p>}
     </div>
   );
 };
