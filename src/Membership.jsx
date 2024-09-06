@@ -51,13 +51,12 @@ const Membership = () => {
       }
     } catch (error) {
       console.error('Error getting members:', error);
-      setMessage('Error fetching members:', error);
+      setMessage('Error fetching members:', error.message);
       setTimeout(() => setMessage(""), 5000);
     }
   };
 
   const handleApprove = async (id) => {
-    // Remove member from the UI immediately
     const updatedMembers = members.filter(member => member.id !== id);
     setMembers(updatedMembers);
   
@@ -69,14 +68,12 @@ const Membership = () => {
         setTimeout(() => setMessage(""), 5000);
         setShowActions(null);
       } else {
-        // If the request fails, add the member back
         setMembers([...updatedMembers, members.find(member => member.id === id)]);
         setMessage("Failed to approve membership.");
         setTimeout(() => setMessage(""), 5000);
       }
     } catch (error) {
       console.error('Error approving membership:', error);
-      // If there's an error, add the member back to the state
       setMembers([...updatedMembers, members.find(member => member.id === id)]);
       setMessage("An error occurred while approving membership.");
       setTimeout(() => setMessage(""), 5000);
@@ -90,7 +87,6 @@ const Membership = () => {
   };
 
   const handleSubmitDecline = async () => {
-    // Remove member from the UI immediately
     const updatedMembers = members.filter(member => member.id !== selectedMember.id);
     setMembers(updatedMembers);
   
@@ -102,14 +98,12 @@ const Membership = () => {
         setTimeout(() => setMessage(""), 5000);
         setShowDeclineModal(false);
       } else {
-        // If the request fails, add the member back
         setMembers([...updatedMembers, selectedMember]);
         setMessage("Failed to decline membership.");
         setTimeout(() => setMessage(""), 5000);
       }
     } catch (error) {
       console.error('Error declining membership:', error);
-      // If there's an error, add the member back to the state
       setMembers([...updatedMembers, selectedMember]);
       setMessage("An error occurred while declining membership.");
       setTimeout(() => setMessage(""), 5000);
@@ -145,64 +139,71 @@ const Membership = () => {
       {/* Display message if exists */}
       {message && <div className="mb-4 p-4 text-white bg-green-500 rounded">{message}</div>}
 
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">Profile</th>
-            <th className="py-2 px-4 border">Email</th>
-            <th className="py-2 px-4 border">Phone Number</th>
-            <th className="py-2 px-4 border">Gender</th>
-            <th className="py-2 px-4 border">Location</th>
-            <th className="py-2 px-4 border">Age</th>
-            <th className="py-2 px-4 border">Nationality</th>
-            <th className="py-2 px-4 border">Membership Number</th>
-            <th className="py-2 px-4 border">Reason For Joining</th>
-            <th className="py-2 px-4 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map((member) => (
-            <tr key={member.id}>
-              <td className="py-2 px-4 border">
-                {member.firstName} {member.middleName ? member.middleName + ' ' : ''}{member.lastName}
-              </td>
-              <td className="py-2 px-4 border">{member.email}</td>
-              <td className="py-2 px-4 border">{member.phoneNumber}</td>
-              <td className="py-2 px-4 border">{member.gender}</td>
-              <td className="py-2 px-4 border">{member.location}</td>
-              <td className="py-2 px-4 border">{member.age}</td>
-              <td className="py-2 px-4 border">{member.nationality}</td>
-              <td className="py-2 px-4 border">{member.memberNumber}</td>
-              <td className="py-2 px-4 border">{member.reasonForJoining}</td>
-              <td className="py-2 px-4 border relative">
-                <FaEllipsisH
-                  onClick={() => setShowActions(showActions === member.id ? null : member.id)}
-                  className="cursor-pointer text-gray-600 hover:text-gray-800"
-                />
-                {showActions === member.id && (
-                  <div
-                    ref={actionsRef}
-                    className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10"
-                  >
-                    <button
-                      onClick={() => handleApprove(member.id)}
-                      className="block w-full text-left p-2 hover:bg-[#004d40] hover:text-white"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleDecline(member)}
-                      className="block w-full text-left p-2 hover:bg-red-600 hover:text-white"
-                    >
-                      Decline
-                    </button>
-                  </div>
-                )}
-              </td>
+      {/* Conditionally render the table or a fallback message */}
+      {members.length > 0 ? (
+        <table className="min-w-full bg-white border">
+          <thead>
+            <tr>
+              <th className="py-2 px-4 border">Profile</th>
+              <th className="py-2 px-4 border">Email</th>
+              <th className="py-2 px-4 border">Phone Number</th>
+              <th className="py-2 px-4 border">Gender</th>
+              <th className="py-2 px-4 border">Location</th>
+              <th className="py-2 px-4 border">Age</th>
+              <th className="py-2 px-4 border">Nationality</th>
+              <th className="py-2 px-4 border">Membership Number</th>
+              <th className="py-2 px-4 border">Reason For Joining</th>
+              <th className="py-2 px-4 border">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {members.map((member) => (
+              <tr key={member.id}>
+                <td className="py-2 px-4 border">
+                  {member.firstName} {member.middleName ? member.middleName + ' ' : ''}{member.lastName}
+                </td>
+                <td className="py-2 px-4 border">{member.email}</td>
+                <td className="py-2 px-4 border">{member.phoneNumber}</td>
+                <td className="py-2 px-4 border">{member.gender}</td>
+                <td className="py-2 px-4 border">{member.location}</td>
+                <td className="py-2 px-4 border">{member.age}</td>
+                <td className="py-2 px-4 border">{member.nationality}</td>
+                <td className="py-2 px-4 border">{member.memberNumber}</td>
+                <td className="py-2 px-4 border">{member.reasonForJoining}</td>
+                <td className="py-2 px-4 border relative">
+                  <FaEllipsisH
+                    onClick={() => setShowActions(showActions === member.id ? null : member.id)}
+                    className="cursor-pointer text-gray-600 hover:text-gray-800"
+                  />
+                  {showActions === member.id && (
+                    <div
+                      ref={actionsRef}
+                      className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10"
+                    >
+                      <button
+                        onClick={() => handleApprove(member.id)}
+                        className="block w-full text-left p-2 hover:bg-[#004d40] hover:text-white"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleDecline(member)}
+                        className="block w-full text-left p-2 hover:bg-red-600 hover:text-white"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div className="text-center text-gray-600">
+          No membership requests found.
+        </div>
+      )}
 
       {showDeclineModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
