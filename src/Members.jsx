@@ -1,41 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import CryptoJS from 'crypto-js';
+
+const MEMBER_URL = "https://arkad-server.onrender.com/users/all-members";
+const key = process.env.REACT_APP_SECRET_KEY;
 
 const Members = () => {
   const [members, setMembers] = useState([]);
+  const [token, setToken] = useState("");
+  const [message, setMessage] = useState("");  
+  const [loading, setLoading] = useState(true); 
   const [currentPage, setCurrentPage] = useState(1);
   const membersPerPage = 10;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // const response = await axios.get('https://localhost:4000/members');
-        // const data = response.data;
-
-        // Dummy data since the endpoint is not available
-        const data = [
-          { id: 1, firstName: "John", middleName: null, lastName: "Doe", email: "johndoe@example.com", gender: "male", location: "Nairobi", age: 24, nationality: "Kenyan", memberNumber: "A-0001-2024", reason: "Reason" },
-          { id: 2, firstName: "Jane", middleName: "Ochieng'", lastName: "Doe", email: "janedoe@example.com", gender: "female", location: "Mombasa", age: 29, nationality: "Kenyan", memberNumber: "A-0002-2024", reason: "Reason" },
-          { id: 3, firstName: "Alex", middleName: null, lastName: "Smith", email: "alexsmith@example.com", gender: "male", location: "Kisumu", age: 31, nationality: "Kenyan", memberNumber: "A-0003-2024", reason: "Reason" },
-          { id: 4, firstName: "Emily", middleName: "Wanjiku", lastName: "Mwangi", email: "emilymwangi@example.com", gender: "female", location: "Nairobi", age: 22, nationality: "Kenyan", memberNumber: "A-0004-2024", reason: "Reason" },
-          { id: 5, firstName: "Michael", middleName: null, lastName: "Brown", email: "michaelbrown@example.com", gender: "male", location: "Eldoret", age: 27, nationality: "Kenyan", memberNumber: "A-0005-2024", reason: "Reason" },
-          { id: 6, firstName: "Sophia", middleName: "Akinyi", lastName: "Omondi", email: "sophiaomondi@example.com", gender: "female", location: "Nairobi", age: 30, nationality: "Kenyan", memberNumber: "A-0006-2024", reason: "Reason" },
-          { id: 7, firstName: "David", middleName: null, lastName: "Johnson", email: "davidjohnson@example.com", gender: "male", location: "Nakuru", age: 35, nationality: "Kenyan", memberNumber: "A-0007-2024", reason: "Reason" },
-          { id: 8, firstName: "Grace", middleName: "Njeri", lastName: "Kariuki", email: "gracekariuki@example.com", gender: "female", location: "Nairobi", age: 28, nationality: "Kenyan", memberNumber: "A-0008-2024", reason: "Reason" },
-          { id: 9, firstName: "Chris", middleName: null, lastName: "Williams", email: "chriswilliams@example.com", gender: "male", location: "Kisumu", age: 33, nationality: "Kenyan", memberNumber: "A-0009-2024", reason: "Reason" },
-          { id: 10, firstName: "Lilian", middleName: "Nyambura", lastName: "Wambui", email: "lilianwambui@example.com", gender: "female", location: "Thika", age: 26, nationality: "Kenyan", memberNumber: "A-0010-2024", reason: "Reason" },
-          { id: 11, firstName: "James", middleName: "Kiptoo", lastName: "Koech", email: "jameskoech@example.com", gender: "male", location: "Nakuru", age: 23, nationality: "Kenyan", memberNumber: "A-0011-2024", reason: "Reason" },
-          { id: 12, firstName: "Mary", middleName: "Atieno", lastName: "Otieno", email: "maryotieno@example.com", gender: "female", location: "Kisumu", age: 32, nationality: "Kenyan", memberNumber: "A-0012-2024", reason: "Reason" },
-        ];
-
-        setMembers(data);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      }
-    };
-
-    fetchData();
+    const storedAccessToken = localStorage.getItem('accessToken');
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
   }, []);
+
+  useEffect(() => {
+    if(token) fetchData();
+  }, [token]);
+
+  const fetchData = async () => {
+    if(!token) return;
+    setLoading(true);
+    try {
+      const response = await axios.get(MEMBER_URL, {
+        headers:{
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if(response.data.success){
+        const { ciphertext, iv } = response.data.data;
+
+        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
+          iv: CryptoJS.enc.Hex.parse(iv),
+          padding: CryptoJS.pad.Pkcs7,
+          mode: CryptoJS.mode.CBC,
+        });
+        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+        decryptedData = decryptedData.replace(/\0+$/, '');
+
+        const decryptedMessages = JSON.parse(decryptedData);
+        setMembers(decryptedMessages.length > 0 ? decryptedMessages : []);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      setMessage('Error fetching members: ' + error.message);
+      setTimeout(() => setMessage(""), 5000);
+    }finally{
+      setLoading(false);
+    }
+  };
 
   // Get current members
   const indexOfLastMember = currentPage * membersPerPage;
@@ -48,34 +67,41 @@ const Members = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">Arkad Family Members</h1>
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">Profile</th>
-            <th className="py-2 px-4 border">Email</th>
-            <th className="py-2 px-4 border">Gender</th>
-            <th className="py-2 px-4 border">Location</th>
-            <th className="py-2 px-4 border">Age</th>
-            <th className="py-2 px-4 border">Nationality</th>
-            <th className="py-2 px-4 border">Membership Number</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentMembers.map((member) => (
-            <tr key={member.id}>
-              <td className="py-2 px-4 border">
-                {member.firstName} {member.middleName ? member.middleName + ' ' : ''}{member.lastName}
-              </td>
-              <td className="py-2 px-4 border">{member.email}</td>
-              <td className="py-2 px-4 border">{member.gender}</td>
-              <td className="py-2 px-4 border">{member.location}</td>
-              <td className="py-2 px-4 border">{member.age}</td>
-              <td className="py-2 px-4 border">{member.nationality}</td>
-              <td className="py-2 px-4 border">{member.memberNumber}</td>
+      {message && <div className="mb-4 p-4 text-white bg-green-500 rounded">{message}</div>}
+      {loading ? (
+        <div>Loading...</div>
+      ) : currentMembers.length > 0 ? (
+        <table className="min-w-full bg-white border">
+          <thead>
+            <tr>
+              <th className="py-2 px-4 border">Profile</th>
+              <th className="py-2 px-4 border">Email</th>
+              <th className="py-2 px-4 border">Phone Number</th>
+              <th className="py-2 px-4 border">Gender</th>
+              <th className="py-2 px-4 border">Location</th>
+              <th className="py-2 px-4 border">Nationality</th>
+              <th className="py-2 px-4 border">Membership Number</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {currentMembers.map((member) => (
+              <tr key={member.id}>
+                <td className="py-2 px-4 border">
+                  {member.firstName} {member.middleName ? member.middleName + ' ' : ''}{member.lastName}
+                </td>
+                <td className="py-2 px-4 border">{member.email}</td>
+                <td className="py-2 px-4 border">{member.phoneNumber}</td>
+                <td className="py-2 px-4 border">{member.gender}</td>
+                <td className="py-2 px-4 border">{member.location}</td>
+                <td className="py-2 px-4 border">{member.nationality}</td>
+                <td className="py-2 px-4 border">{member.memberNumber}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div>No Members Found</div>
+      )}
 
       {/* Pagination */}
       <div className="flex justify-center mt-4">

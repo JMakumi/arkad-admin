@@ -63,11 +63,16 @@ const Membership = () => {
   };
 
   const handleApprove = async (id) => {
+    if (!token) return;
     const updatedMembers = members.filter(member => member.id !== id);
     setMembers(updatedMembers);
   
     try {
-      const response = await axios.put(`${MEMBER_URL}/${id}`, { status: 'approved' });
+      const response = await axios.put(`${MEMBER_URL}/${id}`, { status: 'approved' }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
   
       if (response.data.success) {
         setMessage("Membership approved successfully!");
@@ -95,7 +100,11 @@ const Membership = () => {
     setMembers(updatedMembers);
   
     try {
-      const response = await axios.put(`${MEMBER_URL}/${selectedMember.id}`, { status: 'declined', reason: declineReason });
+      const response = await axios.put(`${MEMBER_URL}/${selectedMember.id}`, { status: 'declined', reason: declineReason }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
   
       if (response.data.success) {
         setMessage("Membership declined successfully!");
