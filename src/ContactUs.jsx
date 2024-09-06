@@ -47,7 +47,7 @@ const ContactUs = () => {
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
-      setLoading(false);  // Set loading to false after the data is fetched
+      setLoading(false);  
     }
   };
 
