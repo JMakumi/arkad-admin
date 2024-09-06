@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
 import jsPDF from 'jspdf';
 import CryptoJS from 'crypto-js';
 import 'jspdf-autotable';
 import logo from './images/logo.png'; 
-import axios from 'axios';
 
-const PARTNER_URL = "http://localhost:3055/users/partners";
+const PARTNER_URL = "https://arkad-server.onrender.com/users/partners";
 const key = process.env.REACT_APP_SECRET_KEY;
 
 const Partners = () => {
