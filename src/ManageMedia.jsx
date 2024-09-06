@@ -1,63 +1,65 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import imageCompression from 'browser-image-compression';
-import image from './images/impact.jpg';
-import image2 from './images/happy.jpg';
+import CryptoJS from 'crypto-js';
+
+const MEDIA_URL = "https://arkad-server.onrender.com/users/media";
+const key = process.env.REACT_APP_SECRET_KEY;
 
 const ManageMedia = () => {
-  const dummyData = [
-    {
-      id: 1,
-      images: [image, image2, image, image2],
-      description: 'Description 1',
-    },
-    {
-      id: 2,
-      images: [image, image2, image],
-      description: 'Description 2',
-    },
-    {
-      id: 3,
-      images: [image, image2, image, image2],
-      description: 'Description 3',
-    },
-    {
-      id: 4,
-      images: [image, image2, image2],
-      description: 'Description 4',
-    },
-    {
-      id: 5,
-      images: [image, image2],
-      description: 'Description 5',
-    },
-    {
-      id: 6,
-      images: [image, image2],
-      description: 'Description 6',
-    },
-    {
-      id: 7,
-      images: [image, image2],
-      description: 'Description 7',
-    },
-    {
-      id: 8,
-      images: [image, image2],
-      description: 'Description 8',
-    },
-  ];
-
-  const [mediaItems, setMediaItems] = useState(dummyData);
+  const [mediaItems, setMediaItems] = useState([]);
   const [isEditing, setIsEditing] = useState({});
   const [editedMediaItems, setEditedMediaItems] = useState({});
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingEditId, setPendingEditId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [token, setToken] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 5;
 
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    const storedAccessToken = localStorage.getItem('accessToken');
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
+  }, []);
+
+  useEffect(() => {
+    if (token) getMedia();
+  }, [token]);
+
+  const getMedia = async () => {
+    if (!token || !key) return;
+    setLoading(true);
+
+    try {
+      const response = await axios.get(MEDIA_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data.success) {
+        const { ciphertext, iv } = response.data.data;
+        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
+          iv: CryptoJS.enc.Hex.parse(iv),
+          padding: CryptoJS.pad.Pkcs7,
+          mode: CryptoJS.mode.CBC,
+        });
+        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+        decryptedData = decryptedData.replace(/\0+$/, '');
+
+        const decryptedMedia = JSON.parse(decryptedData);
+        setMediaItems(decryptedMedia.length > 0 ? decryptedMedia : []);
+      }
+    } catch (error) {
+      console.error('Error getting media:', error);
+      setMessage('Error fetching media: ' + error.message);
+      setTimeout(() => setMessage(""), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -108,47 +110,62 @@ const ManageMedia = () => {
           type: file.type,
         });
 
-        const updatedImages = [...mediaItems.find((item) => item.id === id).images];
+        const updatedImages = [...mediaItems.find((item) => item.id === id).media];
         updatedImages[index] = URL.createObjectURL(newImageFile);
 
-        handleInputChange(id, 'images', updatedImages);
+        handleInputChange(id, 'media', updatedImages);
       } catch (error) {
         console.error('Error compressing image:', error);
       }
     }
   };
 
+  const encryptData = (data) => {
+    const iv = CryptoJS.lib.WordArray.random(16);
+    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), CryptoJS.enc.Utf8.parse(key), {
+      iv: iv,
+      padding: CryptoJS.pad.Pkcs7,
+      mode: CryptoJS.mode.CBC,
+    });
+    return {
+      ciphertext: encrypted.toString(),
+      iv: iv.toString(CryptoJS.enc.Hex),
+    };
+  };
+
   const handleSubmit = async (id) => {
     try {
       const dataToUpdate = editedMediaItems[id];
-      const formData = new FormData();
-      for (const [key, value] of Object.entries(dataToUpdate)) {
-        if (Array.isArray(value)) {
-          value.forEach((item, index) => formData.append(`${key}[${index}]`, item));
-        } else {
-          formData.append(key, value);
-        }
-      }
+      const encryptedData = encryptData(dataToUpdate);
 
-      console.log('Data to be updated:', formData);
-
-      alert('Media updated successfully!');
-      setIsEditing({}); // Close the edit mode
-      setEditedMediaItems((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
+      const response = await axios.put(`${MEDIA_URL}/${id}`, encryptedData, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setOpenMenuId(null); // Reset menu state
+
+      if (response.data.success) {
+        alert('Media updated successfully!');
+        setIsEditing({}); // Close the edit mode
+        setEditedMediaItems((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+        setOpenMenuId(null); // Reset menu state
+        getMedia(); // Reload updated media
+      }
     } catch (error) {
       console.error('Error updating media:', error);
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     try {
-      setMediaItems((prev) => prev.filter((item) => item.id !== id));
+      await axios.delete(`${MEDIA_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       alert('Media deleted successfully!');
+      setMediaItems((prev) => prev.filter((item) => item.id !== id));
       setOpenMenuId(null); // Close the menu after deletion
     } catch (error) {
       console.error('Error deleting media:', error);
@@ -170,144 +187,145 @@ const ManageMedia = () => {
       <h1 className="text-2xl font-bold flex justify-center items-center text-[#006D5B] mb-4">
         Manage Media
       </h1>
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">Images</th>
-            <th className="py-2 px-4 border">Description</th>
-            <th className="py-2 px-4 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((item) => (
-            <tr key={item.id}>
-              <td className="py-2 px-4 border">
-                <div className="flex flex-wrap">
-                  {item.images.map((image, index) => (
-                    <div key={index} className="relative mr-2 mb-2">
-                      {isEditing[item.id] ? (
-                        <input
-                          type="file"
-                          onChange={(e) => handleImageChange(item.id, index, e)}
-                          accept="image/*"
-                        />
-                      ) : (
-                        <img
-                          src={image}
-                          alt="Media"
-                          className="w-20 h-20 object-cover"
-                        />
+      {message && <div className="mb-4 p-4 text-white bg-green-500 rounded">{message}</div>}
+      {loading ? (
+        <div className="text-center">Loading Media...</div>
+      ) : (
+        mediaItems.length > 0 ? (
+          <table className="min-w-full bg-white border">
+            <thead>
+              <tr>
+                <th className="py-2 px-4 border">Images</th>
+                <th className="py-2 px-4 border">Description</th>
+                <th className="py-2 px-4 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((item) => (
+                <tr key={item.id}>
+                  <td className="py-2 px-4 border">
+                    <div className="flex flex-wrap">
+                      {item.media.map((image, index) => (
+                        <div key={index} className="relative mr-2 mb-2">
+                          {isEditing[item.id] ? (
+                            <input
+                              type="file"
+                              onChange={(e) => handleImageChange(item.id, index, e)}
+                              accept="image/*"
+                            />
+                          ) : (
+                            <img
+                              src={image}
+                              alt="Media"
+                              className="w-20 h-20 object-cover"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="py-2 px-4 border">
+                    {isEditing[item.id] ? (
+                      <input
+                        type="text"
+                        value={
+                          editedMediaItems[item.id]?.description || item.description
+                        }
+                        onChange={(e) =>
+                          handleInputChange(item.id, 'description', e.target.value)
+                        }
+                        className="w-full p-2 border rounded"
+                      />
+                    ) : (
+                      item.description
+                    )}
+                  </td>
+                  <td className="py-2 px-4 border">
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setOpenMenuId((prev) => (prev === item.id ? null : item.id))
+                        }
+                        className="text-2xl px-2 py-1"
+                      >
+                        &#x22EE; {/* Three-dotted vertical menu */}
+                      </button>
+                      {openMenuId === item.id && (
+                        <div
+                          className="absolute right-0 mt-2 py-2 w-48 bg-white border rounded-lg shadow-xl z-10"
+                          ref={menuRef}
+                        >
+                          <button
+                            onClick={() => handleEdit(item.id)}
+                            className="block px-4 py-2 w-full text-left"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="block px-4 py-2 w-full text-left"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              </td>
-              <td className="py-2 px-4 border">
-                {isEditing[item.id] ? (
-                  <input
-                    type="text"
-                    value={
-                      editedMediaItems[item.id]?.description ||
-                      item.description
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        item.id,
-                        'description',
-                        e.target.value
-                      )
-                    }
-                    className="w-full p-2 border rounded"
-                  />
-                ) : (
-                  item.description
-                )}
-              </td>
-              <td className="py-2 px-4 border relative">
-                {isEditing[item.id] ? (
-                  <button
-                    onClick={() => handleSubmit(item.id)}
-                    className="bg-[#006D5B] text-white p-2 rounded hover:bg-blue-700"
-                  >
-                    Submit
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() =>
-                        setOpenMenuId(
-                          openMenuId === item.id ? null : item.id
-                        )
-                      }
-                      className="text-gray-600 hover:text-gray-800 focus:outline-none"
-                    >
-                      &#x22EE;
-                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div>No media items found.</div>
+        )
+      )}
 
-                    {openMenuId === item.id && (
-                      <div
-                        ref={menuRef}
-                        className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-lg z-10"
-                      >
-                        <button
-                          onClick={() => handleEdit(item.id)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 font-bold"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 font-bold"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Save button */}
+      {Object.values(isEditing).some((edit) => edit) && (
+        <div className="text-center mt-4">
+          <button
+            onClick={() => handleSubmit(pendingEditId)}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+          >
+            Save
+          </button>
+        </div>
+      )}
 
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-        >
-          Previous
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-        >
-          Next
-        </button>
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => setCurrentPage(index + 1)}
+            className={`mx-1 px-3 py-1 rounded-full ${
+              currentPage === index + 1
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-300 text-black'
+            }`}
+          >
+            {index + 1}
+          </button>
+        ))}
       </div>
 
+      {/* Confirmation Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-xl mb-4">Editing in progress</h2>
-            <p className="mb-4">You are currently editing another media item. Do you want to proceed and discard unsaved changes?</p>
-            <div className="flex justify-end">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded shadow-lg max-w-sm w-full">
+            <p>You have unsaved changes. Do you want to continue?</p>
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowModal(false)}
-                className="bg-gray-300 text-black p-2 rounded mr-2"
+                className="mr-2 px-4 py-2 bg-gray-300 rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={proceedWithEdit}
-                className="bg-red-600 text-white p-2 rounded"
+                className="px-4 py-2 bg-green-500 text-white rounded"
               >
-                Proceed
+                Continue
               </button>
             </div>
           </div>
