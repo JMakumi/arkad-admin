@@ -81,9 +81,7 @@ const ContactUs = () => {
   return (
     <div className="p-4 md:p-8">
       {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50">
-          <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-[#006D5B]"></div>
-        </div>
+        <div className="text-center">Loading Messages...</div>
       )} 
       
       <div className="flex justify-center">
