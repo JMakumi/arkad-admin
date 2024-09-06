@@ -14,7 +14,7 @@ const Membership = () => {
   const [showActions, setShowActions] = useState(null);
   const [token, setToken] = useState("");
   const [message, setMessage] = useState("");  
-  const [loading, setLoading] = useState(true);  // Added loading state
+  const [loading, setLoading] = useState(true);  
   const modalRef = useRef(null);
   const actionsRef = useRef(null);
 
@@ -31,7 +31,7 @@ const Membership = () => {
 
   const fetchData = async () => {
     if (!token || !key) return;
-    setLoading(true);  // Show loading while data is being fetched
+    setLoading(true);  
     try {
       const response = await axios.get(MEMBER_URL, {
         headers: {
@@ -56,8 +56,9 @@ const Membership = () => {
     } catch (error) {
       console.error('Error getting members:', error);
       setMessage('Error fetching members: ' + error.message);
+      setTimeout(() => setMessage(""), 5000);
     } finally {
-      setLoading(false);  // Hide loading once data is fetched
+      setLoading(false);  
     }
   };
 
