@@ -16,6 +16,7 @@ const ManageAchievements = () => {
   const [token, setToken] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -97,6 +98,8 @@ const ManageAchievements = () => {
   };
 
   const handleSubmit = async (id) => {
+    if(!token || !key) return;
+    setIsLoading(true);
     try {
       const dataToUpdate = editedActivities[id];
       const formData = new FormData();
@@ -119,7 +122,7 @@ const ManageAchievements = () => {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       });
 
-      alert('Activity updated successfully!');
+      getAchievements();
       setIsEditing({});
       setEditedActivities((prev) => {
         const updated = { ...prev };
@@ -129,20 +132,26 @@ const ManageAchievements = () => {
       setOpenMenuId(null);
     } catch (error) {
       console.error('Error updating activity:', error);
+    } finally{
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
+    if(!token) return;
+    setIsLoading(true);
     try {
       if (window.confirm('Are you sure you want to delete this achievement? This action is irreversible.')) {
         await axios.delete(`${ACHIEVEMENTS_URL}/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setActivities((prev) => prev.filter((activity) => activity.id !== id));
-        alert('Activity deleted successfully!');
+        getAchievements();
       }
     } catch (error) {
       console.error('Error deleting activity:', error);
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -238,7 +247,7 @@ const ManageAchievements = () => {
                         onClick={() => handleSubmit(activity.id)}
                         className="bg-[#006D5B] text-white p-2 rounded hover:bg-blue-600"
                       >
-                        Submit
+                        {isLoading? "Sending..." : "Submit"}
                       </button>
                     ) : (
                       <div className="relative">
@@ -265,7 +274,7 @@ const ManageAchievements = () => {
                               className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
                               onClick={() => handleDelete(activity.id)}
                             >
-                              Delete
+                              {isLoading? "Deleting..." : "Delete"}
                             </li>
                           </ul>
                         )}

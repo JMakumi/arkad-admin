@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import CryptoJS from 'crypto-js';
 import imageCompression from 'browser-image-compression';
-import image from './images/test.jpg';
+
+const LEADERSHIP_URL = "https://arkad-server.onrender.com/users/leaders";
+const key = process.env.REACT_APP_SECRET_KEY;
 
 const ManageLeadership = () => {
   const [leadership, setLeadership] = useState([]);
@@ -10,64 +13,55 @@ const ManageLeadership = () => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [pendingEditId, setPendingEditId] = useState(null);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of items per page
-
+  const [token, setToken] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const menuRef = useRef(null);
+  
+  const itemsPerPage = 5; 
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch data when the component mounts
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Replace with your API call
-        const response = await axios.get('/api/leadership');
-        setLeadership(response.data);
-      } catch (error) {
-        console.error('Error fetching leadership:', error);
-        // Use dummy data if fetching fails
-        setLeadership([
-          {
-            id: 1,
-            image: image,
-            name: "John Doe",
-            role: "Founder and CEO",
-            description: "Studied at XYZ, worked at TVS, but rides Bajaj",
-          },
-          {
-            id: 2,
-            image: image,
-            name: "Jane Doe",
-            role: "Co-Founder and Strategic Partnerships Director",
-            description: "Studied at XYZ, Mama mboga, but rides TVS",
-          },
-          {
-            id: 3,
-            image: image,
-            name: "Kanda Bondoman",
-            role: "Co-Founder and Organizing Director",
-            description: "Studied at XYZ, has never succeeded in anything, owns nothing",
-          },
-        ]);
-      }
-    };
-
-    fetchData();
+    const storedAccessToken = localStorage.getItem('accessToken');
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
   }, []);
 
-  // Handle click outside to close the dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
-      }
-    };
+    if(token) fetchData();
+  }, [token]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const fetchData = async () => {
+    if(!token || !key) return;
+    setLoading(true);
+    try {
+      const response = await axios.get(LEADERSHIP_URL, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if(response.data.success){
+        const { ciphertext, iv } = response.data.data;
+        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
+          iv: CryptoJS.enc.Hex.parse(iv),
+          padding: CryptoJS.pad.Pkcs7,
+          mode: CryptoJS.mode.CBC,
+        });
+        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
+        decryptedData = decryptedData.replace(/\0+$/, '');
+
+        const decryptedMembers = JSON.parse(decryptedData);
+        setLeadership(decryptedMembers.length > 0 ? decryptedMembers : []);
+      }
+    } catch (error) {
+      setMessage(`There was an error: ${error}`);
+      setTimeout(() => setMessage(""), 5000);
+    } finally{
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (id) => {
     if (Object.values(isEditing).some((edit) => edit)) {
@@ -95,8 +89,8 @@ const ManageLeadership = () => {
     if (file) {
       try {
         const options = {
-          maxSizeMB: 0.4, // Max file size in MB (400 KB)
-          maxWidthOrHeight: 800, // Max width or height
+          maxSizeMB: 0.4, 
+          maxWidthOrHeight: 800, 
           useWebWorker: true,
         };
 
@@ -114,6 +108,8 @@ const ManageLeadership = () => {
   };
 
   const handleSubmit = async (id) => {
+    if (!token || !key) return;
+    setIsLoading(true);
     try {
       const dataToUpdate = editedLeadership[id];
       const formData = new FormData();
@@ -121,31 +117,57 @@ const ManageLeadership = () => {
         formData.append(key, value);
       }
 
-      // Replace with your API call
-      await axios.put(`/api/leadership/${id}`, formData);
+      // Encrypt the name, role, and description
+      const { name, role, description } = dataToUpdate;
+      const dataStr = JSON.stringify({ name, role, description });
+      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(key), {
+        iv: CryptoJS.enc.Hex.parse(iv),
+        padding: CryptoJS.pad.Pkcs7,
+        mode: CryptoJS.mode.CBC,
+      }).toString();
 
-      alert('Leadership updated successfully!');
-      setIsEditing({}); // Close the edit mode
+      formData.set('iv', iv);
+      formData.set('ciphertext', encryptedData);
+
+      await axios.put(`${LEADERSHIP_URL}/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      fetchData()
+      setIsEditing({});
       setEditedLeadership((prev) => {
         const updated = { ...prev };
         delete updated[id];
         return updated;
       });
-      setOpenMenuId(null); // Reset menu state
+      setOpenMenuId(null);
     } catch (error) {
-      console.error('Error updating leadership:', error);
+      console.error('Error updating leadership member:', error);
+    } finally{
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
+    if (!token || !key) return;
+    setIsLoading(true);
     try {
-      // Replace with your API call
-      await axios.delete(`/api/leadership/${id}`);
-      setLeadership((prev) => prev.filter((item) => item.id !== id));
-      alert('Leadership deleted successfully!');
-      setOpenMenuId(null); // Close the menu after deletion
+      if (window.confirm('Are you sure you want to delete this leader? This action is irreversible.')) {
+        await axios.delete(`${LEADERSHIP_URL}/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setLeadership((prev) => prev.filter((item) => item.id !== id));
+        fetchData()
+      }
     } catch (error) {
-      console.error('Error deleting leadership:', error);
+      console.error('Error deleting leader:', error);
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -154,184 +176,191 @@ const ManageLeadership = () => {
     setShowModal(false);
   };
 
-  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = leadership.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(leadership.length / itemsPerPage);
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold flex justify-center items-center text-[#006D5B] mb-4">
-        Manage Leadership
-      </h1>
-      <table className="min-w-full bg-white border">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">Image</th>
-            <th className="py-2 px-4 border">Name</th>
-            <th className="py-2 px-4 border">Role</th>
-            <th className="py-2 px-4 border">Description</th>
-            <th className="py-2 px-4 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((item) => (
-            <tr key={item.id}>
-              <td className="py-2 px-4 border">
-                {isEditing[item.id] ? (
-                  <input
-                    type="file"
-                    onChange={(e) => handleImageChange(item.id, e)}
-                    accept="image/*"
-                  />
-                ) : (
-                  <img
-                    src={item.image}
-                    alt="Leadership"
-                    className="w-20 h-20 object-cover"
-                  />
-                )}
-              </td>
-              <td className="py-2 px-4 border">
-                {isEditing[item.id] ? (
-                  <input
-                    type="text"
-                    value={
-                      editedLeadership[item.id]?.name || item.name
-                    }
-                    onChange={(e) =>
-                      handleInputChange(item.id, 'name', e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                  />
-                ) : (
-                  item.name
-                )}
-              </td>
-              <td className="py-2 px-4 border">
-                {isEditing[item.id] ? (
-                  <input
-                    type="text"
-                    value={
-                      editedLeadership[item.id]?.role || item.role
-                    }
-                    onChange={(e) =>
-                      handleInputChange(item.id, 'role', e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                  />
-                ) : (
-                  item.role
-                )}
-              </td>
-              <td className="py-2 px-4 border">
-                {isEditing[item.id] ? (
-                  <input
-                    type="text"
-                    value={
-                      editedLeadership[item.id]?.description || item.description
-                    }
-                    onChange={(e) =>
-                      handleInputChange(item.id, 'description', e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                  />
-                ) : (
-                  item.description
-                )}
-              </td>
-              <td className="py-2 px-4 border relative">
-                {isEditing[item.id] ? (
-                  <button
-                    onClick={() => handleSubmit(item.id)}
-                    className="bg-[#006D5B] text-white p-2 rounded hover:bg-blue-700"
-                  >
-                    Submit
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={() =>
-                        setOpenMenuId(
-                          openMenuId === item.id ? null : item.id
-                        )
-                      }
-                      className="text-gray-600 hover:text-gray-800 focus:outline-none"
-                    >
-                      &#x22EE; {/* Unicode for vertical ellipsis */}
-                    </button>
-
-                    {openMenuId === item.id && (
-                      <div
-                        ref={menuRef}
-                        className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-lg z-10"
-                      >
-                        <button
-                          onClick={() => handleEdit(item.id)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 font-bold"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 font-bold"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-        >
-          Previous
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
-        >
-          Next
-        </button>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg">
-            <p className="mb-4">You have unsaved changes. Proceed and lose them?</p>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowModal(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={proceedWithEdit}
-                className="bg-red-600 text-white px-4 py-2 rounded"
-              >
-                Proceed
-              </button>
-            </div>
+        <div className="p-8">
+          <h1 className="text-2xl font-bold flex justify-center items-center text-[#006D5B] mb-4">
+            Manage Leadership
+          </h1>
+          {message && <div className="mb-4 p-4 text-white bg-green-500 rounded">{message}</div>}
+          {loading? (
+            <div className="text-center">Loading Leaders...</div>
+          ):(
+            leadership.length>0? (
+              <table className="min-w-full bg-white border">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border">Image</th>
+                    <th className="py-2 px-4 border">Name</th>
+                    <th className="py-2 px-4 border">Role</th>
+                    <th className="py-2 px-4 border">Description</th>
+                    <th className="py-2 px-4 border">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="py-2 px-4 border">
+                        {isEditing[item.id] ? (
+                          <input
+                            type="file"
+                            onChange={(e) => handleImageChange(item.id, e)}
+                            accept="image/*"
+                          />
+                        ) : (
+                          <img
+                            src={item.image}
+                            alt="Leadership"
+                            className="w-20 h-20 object-cover"
+                          />
+                        )}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {isEditing[item.id] ? (
+                          <input
+                            type="text"
+                            value={
+                              editedLeadership[item.id]?.name || item.name
+                            }
+                            onChange={(e) =>
+                              handleInputChange(item.id, 'name', e.target.value)
+                            }
+                            className="w-full p-2 border rounded"
+                          />
+                        ) : (
+                          item.name
+                        )}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {isEditing[item.id] ? (
+                          <input
+                            type="text"
+                            value={
+                              editedLeadership[item.id]?.role || item.role
+                            }
+                            onChange={(e) =>
+                              handleInputChange(item.id, 'role', e.target.value)
+                            }
+                            className="w-full p-2 border rounded"
+                          />
+                        ) : (
+                          item.role
+                        )}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {isEditing[item.id] ? (
+                          <input
+                            type="text"
+                            value={
+                              editedLeadership[item.id]?.description || item.description
+                            }
+                            onChange={(e) =>
+                              handleInputChange(item.id, 'description', e.target.value)
+                            }
+                            className="w-full p-2 border rounded"
+                          />
+                        ) : (
+                          item.description
+                        )}
+                      </td>
+                      <td className="py-2 px-4 border relative">
+                        {isEditing[item.id] ? (
+                          <button
+                            onClick={() => handleSubmit(item.id)}
+                            className="bg-[#006D5B] text-white p-2 rounded hover:bg-blue-700"
+                          >
+                            {isLoading? "Sending..." : "Submit"}
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() =>
+                                setOpenMenuId(
+                                  openMenuId === item.id ? null : item.id
+                                )
+                              }
+                              className="text-gray-600 hover:text-gray-800 focus:outline-none"
+                            >
+                              &#x22EE; {/* Unicode for vertical ellipsis */}
+                            </button>
+    
+                            {openMenuId === item.id && (
+                              <div
+                                ref={menuRef}
+                                className="absolute right-0 mt-2 w-24 bg-white border rounded shadow-lg z-10"
+                              >
+                                <button
+                                  onClick={() => handleEdit(item.id)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 font-bold"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(item.id)}
+                                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 font-bold"
+                                >
+                                  {isLoading? "Deleting..." : "Delete"}
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ):(
+              <div>No Leaders Found</div>
+            )
+          )}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
+            >
+              Previous
+            </button>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="bg-gray-500 text-white p-2 rounded hover:bg-gray-400"
+            >
+              Next
+            </button>
           </div>
+    
+          {showModal && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-8 rounded-lg shadow-lg">
+                <p className="mb-4">You have unsaved changes. Proceed and lose them?</p>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={proceedWithEdit}
+                    className="bg-red-600 text-white px-4 py-2 rounded"
+                  >
+                    Proceed
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
+      );
 };
 
 export default ManageLeadership;

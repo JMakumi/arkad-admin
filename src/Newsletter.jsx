@@ -1,10 +1,25 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import CryptoJS from 'crypto-js';
+
+const NEWLETTER_URL = "https://arkad-server.onrender.com/users/newsletter";
+const key = process.env.REACT_APP_SECRET_KEY;
 
 const Newsletter = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [sources, setSources] = useState([]);
+  const [token, setToken] = useState("");
+  const [userId, setUserId] = useState("");
+  const [message, setMessage] = useState("");  
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); 
+
+  useEffect(() => {
+    const storedAccessToken = localStorage.getItem('accessToken');
+    const userData = localStorage.getItem("userData");
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
+    if (userData) setUserId(JSON.parse(userData).id)
+  }, []);
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);
@@ -20,18 +35,57 @@ const Newsletter = () => {
   };
 
   const handleSubmit = async () => {
+    if(!token || !key || !userId) return;
+    setLoading(true);
     const newsletterData = {
       title,
       content,
       sources,
+      userId
     };
 
     try {
-      const response = await axios.post('https://your-api-endpoint.com/newsletters', newsletterData);
-      alert('Newsletter sent successfully!');
+      const dataStr = JSON.stringify(newsletterData);
+      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(key), {
+        iv: CryptoJS.enc.Hex.parse(iv),
+        padding: CryptoJS.pad.Pkcs7,
+        mode: CryptoJS.mode.CBC
+      }).toString();
+
+      const payload = {
+        iv: iv,
+        ciphertext: encryptedData
+      };
+
+
+      const response = await fetch(NEWLETTER_URL, {
+        method: "POST",
+        headers:{
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if(result.success){
+        setContent("");
+        setTitle("");
+        setSources("");
+        setMessage(result.message);
+        setTimeout(() => setMessage(""), 5000);
+      }else{
+        setError(result.message);
+        setTimeout(() => setError(""), 5000);
+      }
     } catch (error) {
       console.error('Error sending newsletter:', error);
-      alert('Failed to send newsletter.');
+      setError('Error fetching members: ' + error.message);
+      setTimeout(() => setError(""), 5000);
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -40,7 +94,7 @@ const Newsletter = () => {
       <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">Create Newsletter</h1>
       
       <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="title">
+        <label className="block text-[#006D5B] font-bold mb-2" htmlFor="title">
           Title
         </label>
         <input
@@ -55,7 +109,7 @@ const Newsletter = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="content">
+        <label className="block text-[#006D5B] font-bold mb-2" htmlFor="content">
           Content
         </label>
         <textarea
@@ -70,7 +124,7 @@ const Newsletter = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 font-bold mb-2" htmlFor="sources">
+        <label className="block text-[#006D5B] font-bold mb-2" htmlFor="sources">
           Sources (separated by commas)
         </label>
         <input
@@ -82,19 +136,17 @@ const Newsletter = () => {
           required
         />
       </div>
-
-      {/* <div className="mt-4">
-        <h2 className="text-xl font-semibold">Preview:</h2>
-        <p><strong>Title:</strong> {title}</p>
-        <p><strong>Content:</strong> {content}</p>
-        <p><strong>Sources:</strong> {sources.join(', ')}</p>
-      </div> */}
-
+      {error && (
+          <div className="text-red-500 mt-2 text-sm text-center">{error}</div>
+        )}
+      {message && (
+        <div className="text-green-600 mt-2 text-sm text-center">{message}</div>
+      )}
       <button
         onClick={handleSubmit}
         className="bg-[#006D5B] text-white p-2 rounded mt-4 hover:bg-[#004d40]"
       >
-        Send Newsletter
+        {loading? "Sending..." : "Submit"}
       </button>
     </div>
   );

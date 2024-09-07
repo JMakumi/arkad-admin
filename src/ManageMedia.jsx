@@ -12,6 +12,7 @@ const ManageMedia = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 5;
 
   const menuRef = useRef(null);
@@ -70,16 +71,20 @@ const ManageMedia = () => {
   }, []);
 
   const handleDelete = async (id) => {
+    if(!token) return;
+    setIsLoading(true);
     try {
       if (window.confirm('Are you sure you want to delete this media item? This action is irreversible.')) {
         await axios.delete(`${MEDIA_URL}/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMediaItems((prev) => prev.filter((item) => item.id !== id));
-        alert('Media deleted successfully!');
+        getMedia()
       }
     } catch (error) {
       console.error('Error deleting media:', error);
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -138,7 +143,7 @@ const ManageMedia = () => {
                           onClick={() => handleDelete(item.id)}
                           className="block px-4 py-2 w-full text-left hover:bg-gray-200"
                         >
-                          Delete
+                          {isLoading? "Deleting..." : "Delete"}
                         </button>
                       </div>
                     )}
