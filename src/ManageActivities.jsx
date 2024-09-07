@@ -167,7 +167,7 @@ const ManageAchievements = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold flex justify-center items-center text-[#006D5B] mb-4">
-        Manage Achievements
+        Manage Activities
       </h1>
       {message && <div className="mb-4 p-4 text-white bg-green-500 rounded">{message}</div>}
       {loading ? (
