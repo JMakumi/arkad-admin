@@ -1,0 +1,38 @@
+.loading-bubble-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px; /* Adjust height as needed */
+  }
+  
+  .loading-bubble {
+    width: 50px;
+    height: 50px;
+    background-color: #006D5B;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    50% {
+      transform: scale(1.5);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+  }
+  
+  .loading-text {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #006D5B;
+    text-align: center;
+  }
+  
