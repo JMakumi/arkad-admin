@@ -59,7 +59,7 @@ const Media = () => {
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     accept: 'image/jpeg, image/jpg, image/png',
-    maxFiles: 10,
+    maxFiles: 3,
   });
 
   const handleSubmit = async () => {
@@ -125,7 +125,7 @@ const Media = () => {
         <input {...getInputProps()} />
         <div className="upload-content text-center p-4 border-dashed border-2 border-[#006D5B] rounded">
           <FaUpload className="text-[#006D5B] text-2xl mb-2" />
-          <p className="text-[#006D5B]">Drag & drop up to 10 images here, or click to select them (Max: 400KB per image).</p>
+          <p className="text-[#006D5B]">Drag & drop up to 3 images here, or click to select them (Max: 400KB per image).</p>
         </div>
         <div className="uploaded-images mt-4 grid grid-cols-2 gap-4">
           {images.map((img, index) => (
@@ -139,7 +139,7 @@ const Media = () => {
 
       <div className="form-fields">
         <div className="mb-4">
-          <label htmlFor="description" className="block text-[#006D5B] mb-2">Description</label>
+          <label htmlFor="description" className="block text-[#006D5B] mb-2">Event Title and Date</label>
           <textarea
             id="description"
             value={description}

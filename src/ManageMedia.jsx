@@ -107,7 +107,7 @@ const ManageMedia = () => {
             <thead>
               <tr>
                 <th className="py-2 px-4 border">Images</th>
-                <th className="py-2 px-4 border">Description</th>
+                <th className="py-2 px-4 border">Event Title</th>
                 <th className="py-2 px-4 border">Actions</th>
               </tr>
             </thead>
