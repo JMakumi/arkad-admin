@@ -74,26 +74,18 @@ const Members = () => {
         <table className="min-w-full bg-white border">
           <thead>
             <tr>
-              <th className="py-2 px-4 border">Profile</th>
+              <th className="py-2 px-4 border">Full Name</th>
               <th className="py-2 px-4 border">Email</th>
               <th className="py-2 px-4 border">Phone Number</th>
-              <th className="py-2 px-4 border">Gender</th>
-              <th className="py-2 px-4 border">Location</th>
-              <th className="py-2 px-4 border">Nationality</th>
               <th className="py-2 px-4 border">Membership Number</th>
             </tr>
           </thead>
           <tbody>
             {currentMembers.map((member) => (
               <tr key={member.id}>
-                <td className="py-2 px-4 border">
-                  {member.firstName} {member.middleName ? member.middleName + ' ' : ''}{member.lastName}
-                </td>
+                <td className="py-2 px-4 border">{member.fullName} </td>
                 <td className="py-2 px-4 border">{member.email}</td>
                 <td className="py-2 px-4 border">{member.phoneNumber}</td>
-                <td className="py-2 px-4 border">{member.gender}</td>
-                <td className="py-2 px-4 border">{member.location}</td>
-                <td className="py-2 px-4 border">{member.nationality}</td>
                 <td className="py-2 px-4 border">{member.memberNumber}</td>
               </tr>
             ))}
