@@ -9,6 +9,7 @@ const LOGIN_URL="https://arkad-server.onrender.com/users/login";
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);  // New state for toggling password visibility
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -20,7 +21,6 @@ const Login = ({ onLogin }) => {
     }
     setLoading(true);
 
-    
     try {
       const dataToEncrypt = {
         username: email,
@@ -64,13 +64,13 @@ const Login = ({ onLogin }) => {
         setTimeout(() => setError(""), 5000);
         return;
       }
-  } catch (error) {
-    setError("There was an error loging in", error);
-    setTimeout(() => setError(""), 5000);
-    return;
-  }finally{
-    setLoading(false);
-  }
+    } catch (error) {
+      setError("There was an error logging in", error);
+      setTimeout(() => setError(""), 5000);
+      return;
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,7 +93,7 @@ const Login = ({ onLogin }) => {
           <div className="mb-6">
             <label className="block text-gray-700 mb-2" htmlFor="password">Password</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}  // Change type based on checkbox
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -101,6 +101,16 @@ const Login = ({ onLogin }) => {
               placeholder="password123"
               required
             />
+          </div>
+          <div className="mb-6 flex items-center">
+            <input
+              type="checkbox"
+              id="show-password"
+              checked={showPassword}
+              onChange={(e) => setShowPassword(e.target.checked)}  // Toggle password visibility
+              className="mr-2"
+            />
+            <label htmlFor="show-password" className="text-gray-700">Show Password</label>
           </div>
           <div className="mb-6 text-center">
             <NavLink to="/forgot-password" className="text-[#006D5B] hover:underline">
