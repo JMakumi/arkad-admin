@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from "axios"
 import CryptoJS from 'crypto-js';
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate, NavLink } from 'react-router-dom';
@@ -41,20 +40,27 @@ const Login = ({ onLogin }) => {
         ciphertext: encryptedData
       };
 
-      const response = await axios.post(LOGIN_URL, payload);
-      if(response.data.success){
+      const response = await fetch(LOGIN_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if(result.success){
         onLogin();
         navigate('/working');
-        const decodedToken = jwtDecode(response.data.accessToken);
-        console.log(response.data.accessToken);
+        const decodedToken = jwtDecode(result.accessToken);
         const userDetails = {
             id: decodedToken.id,
             username: decodedToken.username
           };
         localStorage.setItem("userData", JSON.stringify(userDetails));
-        localStorage.setItem("accessToken", JSON.stringify(response.data.accessToken));
+        localStorage.setItem("accessToken", JSON.stringify(result.accessToken));
       }else{
-        setError(response.data.message);
+        setError(result.message);
         setTimeout(() => setError(""), 5000);
         return;
       }

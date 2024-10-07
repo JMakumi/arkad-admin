@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
@@ -42,17 +41,25 @@ const Signup = () => {
         ciphertext: encryptedData
       };
 
-      const response = await axios.post(SIGNUP_URL, payload);
+      const response = await fetch(SIGNUP_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-      if(response.data.success){
-        setSuccess(response.data.message);
+      const result = await response.json();
+
+      if(result.success){
+        setSuccess(result.message);
         setTimeout(()=>setSuccess(""),5000);
         setEmail("");
         setFirstName("");
         setLastName("");
 
       }else{
-        setError(response.data.message);
+        setError(result.message);
         setTimeout(() => setError(""),5000);
         return;
       };
