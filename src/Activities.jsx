@@ -76,6 +76,7 @@ const Activities = () => {
     }
     if (!token || !userId) return;
     setLoading(true);
+    console.log(`ID: ${userId}`);
 
     try {
       const payload = new FormData();
