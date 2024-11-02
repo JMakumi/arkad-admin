@@ -9,7 +9,7 @@ const LOGIN_URL="https://arkad-server.onrender.com/users/login";
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);  // New state for toggling password visibility
+  const [showPassword, setShowPassword] = useState(false);  
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -55,7 +55,9 @@ const Login = ({ onLogin }) => {
         const decodedToken = jwtDecode(result.accessToken);
         const userDetails = {
             id: decodedToken.id,
-            username: decodedToken.username
+            username: decodedToken.username,
+            role: decodedToken.role,
+            name: decodedToken.name
           };
         localStorage.setItem("userData", JSON.stringify(userDetails));
         localStorage.setItem("accessToken", JSON.stringify(result.accessToken));
