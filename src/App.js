@@ -55,7 +55,7 @@ const App = () => {
       const activityEvents = ['click', 'mousemove', 'keydown'];
       activityEvents.forEach(event => window.addEventListener(event, resetInactivityTimer));
       
-      const inactivityTimer = setTimeout(handleInactivity, 60000); // 60 seconds
+      const inactivityTimer = setTimeout(handleInactivity, 120000); // 60 seconds
 
       if (isInactive) handleLogout();
 
