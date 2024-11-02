@@ -69,7 +69,7 @@ const Activities = () => {
   });
 
   const handleSubmit = async () => {
-    if (!title || !venue || !date || !image) {
+    if (!title || !venue || !date || !image || !userId) {
       setError('Please fill out all fields and upload an image.');
       setTimeout(() => setError(""), 5000);
       return;
