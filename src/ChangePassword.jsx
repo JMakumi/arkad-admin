@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
 const secretKey = process.env.REACT_APP_SECRET_KEY;
@@ -100,20 +99,24 @@ const ChangePassword = () => {
 
       const payload = { iv, ciphertext: encryptedData };
 
-      const response = await axios.put(CHANGE_PASSWORD_URL, payload, {
+      const response = await fetch(CHANGE_PASSWORD_URL, {
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify(payload)
       });
 
-      if (response.data.success) {
+      const res = await response.json();
+
+      if (res.success) {
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        setSuccess(response.data.message);
+        setSuccess(res.message);
         setTimeout(() => setSuccess(""), 5000);
       } else {
-        setError(response.data.message);
+        setError(res.message);
         setTimeout(() => setError(""), 5000);
       }
     } catch (err) {
