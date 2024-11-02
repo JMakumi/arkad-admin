@@ -243,7 +243,7 @@ const ManageAchievements = () => {
                         value={editedActivities[activity.id]?.date || activity.date}
                         onChange={(e) => handleInputChange(activity.id, 'date', e.target.value)}
                         className="w-full p-2 border rounded"
-                        max={getTodayDate()}
+                        min={getTodayDate()}
                       />
                     ) : (
                       activity.date
