@@ -90,7 +90,7 @@ const Activities = () => {
         headers: {
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(payload)
+        body: payload
       });
 
       const result = await response.json();
