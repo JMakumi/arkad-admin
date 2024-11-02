@@ -6,7 +6,7 @@ const secretKey = process.env.REACT_APP_SECRET_KEY;
 const CHANGE_PASSWORD_URL = "https://arkad-server.onrender.com/users/change-password";
 
 const ChangePassword = () => {
-  const [email, setEmail] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -15,11 +15,18 @@ const ChangePassword = () => {
   const [error, setError] = useState('');
   const [token, setToken] = useState("");
   const [success, setSuccess] = useState("");
+  const [userDetails, setUserDetails] = useState('');
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  useEffect(()=>{
+  useEffect(() => {
     const storedAccessToken = localStorage.getItem('accessToken');
-    if(storedAccessToken) setToken(JSON.parse(storedAccessToken))
-  }, [])
+    const storedUserData = JSON.parse(localStorage.getItem('userData'));
+
+    if (storedUserData) setUserDetails(storedUserData.username);
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
+  }, []);
 
   const validatePassword = (password) => {
     const lengthRequirement = /.{6,15}/;
@@ -58,7 +65,7 @@ const ChangePassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !newPassword || !confirmPassword) {
+    if (!oldPassword || !newPassword || !confirmPassword) {
       setError('Please fill in all fields.');
       setTimeout(() => setError(""), 5000);
       return;
@@ -76,9 +83,10 @@ const ChangePassword = () => {
     if (!token) return;
 
     setLoading(true);
-    const dataToEncrypt={
-      username: email,
-      password: newPassword
+    const dataToEncrypt = {
+      username: userDetails,
+      oldPassword,
+      newPassword
     };
 
     try {
@@ -99,11 +107,11 @@ const ChangePassword = () => {
       });
 
       if (response.data.success) {
-        setEmail("");
+        setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
         setSuccess(response.data.message);
-        setTimeout(() => setSuccess(""), 5000)
+        setTimeout(() => setSuccess(""), 5000);
       } else {
         setError(response.data.message);
         setTimeout(() => setError(""), 5000);
@@ -121,21 +129,28 @@ const ChangePassword = () => {
         <h2 className="text-3xl font-bold mb-8 text-center text-[#006D5B]">Change Password</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="email">Email</label>
+            <label className="block text-gray-700 mb-2" htmlFor="oldPassword">Old Password</label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type={showOldPassword ? 'text' : 'password'}
+              id="oldPassword"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
               className="w-full p-3 border rounded focus:outline-none focus:border-[#006D5B] transition duration-200"
-              placeholder="user@example.com"
+              placeholder="Enter your old password"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowOldPassword(!showOldPassword)}
+              className="text-sm text-blue-500 mt-2"
+            >
+              {showOldPassword ? 'Hide' : 'Show'} Password
+            </button>
           </div>
           <div className="mb-6">
             <label className="block text-gray-700 mb-2" htmlFor="newPassword">New Password</label>
             <input
-              type="password"
+              type={showNewPassword ? 'text' : 'password'}
               id="newPassword"
               value={newPassword}
               onChange={handlePasswordChange}
@@ -143,13 +158,20 @@ const ChangePassword = () => {
               placeholder="Enter your new password"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="text-sm text-blue-500 mt-2"
+            >
+              {showNewPassword ? 'Hide' : 'Show'} Password
+            </button>
             <div className="text-sm text-red-500 mt-1">{passwordError}</div>
             <div className="text-sm text-green-500 mt-1">{passwordStrength}</div>
           </div>
           <div className="mb-6">
             <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">Confirm Password</label>
             <input
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -157,9 +179,16 @@ const ChangePassword = () => {
               placeholder="Confirm your new password"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="text-sm text-blue-500 mt-2"
+            >
+              {showConfirmPassword ? 'Hide' : 'Show'} Password
+            </button>
           </div>
           {error && <div className="text-red-500 mt-2 text-sm text-center">{error}</div>}
-          {success && (<div className="text-green-600 mt-2 text-sm text-center">{success}</div>)}
+          {success && <div className="text-green-600 mt-2 text-sm text-center">{success}</div>}
           <button
             type="submit"
             className="w-full bg-[#006D5B] text-white py-3 px-4 rounded hover:bg-[#005946] transition duration-200"
