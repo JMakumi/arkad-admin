@@ -6,7 +6,7 @@ import {
   FaNewspaper, FaCogs, FaUserTie, FaChevronDown, FaChevronRight, FaUserCircle,
 } from 'react-icons/fa';
 
-const Dashboard = ({ userRole, onLogout, userName }) => {
+const Dashboard = ({ userRole, onLogout }) => {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -19,8 +19,11 @@ const Dashboard = ({ userRole, onLogout, userName }) => {
   };
 
   useEffect(() => {
-    const userData = localStorage.getItem("userData");
-    if(userData) setUserData(userData.name)
+    const storedUserData = JSON.parse(localStorage.getItem('userData'));
+
+    if (storedAccessToken && storedUserData) {
+      setUserData(storedUserData.name);
+    }
   }, []);
 
   return (
