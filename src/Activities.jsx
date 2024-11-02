@@ -88,8 +88,7 @@ const Activities = () => {
       const response = await fetch(ACTIVITIES_URL, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
