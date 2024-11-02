@@ -12,7 +12,7 @@ const Dashboard = ({ userRole, onLogout }) => {
   const [mediaOpen, setMediaOpen] = useState(false);
   const [membershipOpen, setMembershipOpen] = useState(false);
   const [leadershipOpen, setLeadershipOpen] = useState(false);
-  const [userData, setUserData] = useState('');
+  const [userData, setUserData] = useState(null);
 
   const toggleDropdown = (setDropdownState, dropdownState) => {
     setDropdownState(!dropdownState);
@@ -21,7 +21,7 @@ const Dashboard = ({ userRole, onLogout }) => {
   useEffect(() => {
     const storedUserData = JSON.parse(localStorage.getItem('userData'));
     if (storedUserData) {
-      setUserData(storedUserData);
+      setUserData(storedUserData.name);
     }
   }, []);
 
