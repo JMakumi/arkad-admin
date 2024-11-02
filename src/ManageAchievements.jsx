@@ -162,6 +162,14 @@ const ManageAchievements = () => {
     setShowModal(false);
   };
 
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = activities.slice(indexOfFirstItem, indexOfLastItem);
@@ -238,6 +246,7 @@ const ManageAchievements = () => {
                         value={editedActivities[activity.id]?.date || activity.date}
                         onChange={(e) => handleInputChange(activity.id, 'date', e.target.value)}
                         className="w-full p-2 border rounded"
+                        max={getTodayDate()} // Set max to today's date
                       />
                     ) : (
                       activity.date
