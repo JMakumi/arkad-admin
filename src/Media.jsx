@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 
 const MEDIA_URL = "https://arkad-server.onrender.com/users/media";
-const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 const Media = () => {
   const [images, setImages] = useState([]);
@@ -67,47 +64,38 @@ const Media = () => {
       setError('Please enter a description and upload at least one image.');
       return;
     }
-    if (!token || !secretKey || !userId) return;
+    if (!token || !userId) return;
 
     setLoading(true);
 
     try {
-      const dataToEncrypt = {
-        description,
-        userId,
-      };
-
-      const dataStr = JSON.stringify(dataToEncrypt);
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC,
-      }).toString();
-
       const payload = new FormData();
-      payload.append("iv", iv);
-      payload.append("ciphertext", encryptedData);
+      payload.append("description", description);
+      payload.append("userId", userId);
 
       images.forEach((image) => {
         payload.append('images', image); 
       });
       
 
-      const response = await axios.post(MEDIA_URL, payload, {
+      const response = await fetch(MEDIA_URL, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
+        body: JSON.stringify(payload)
       });
 
-      if (response.data.success) {
-        setSuccess(response.data.message);
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message);
         setDescription('');
         setImages([]);
         setCompressedSizes([]);
       } else {
-        setError(response.data.message);
+        setError(result.message);
       }
     } catch (error) {
       setError('There was an error submitting your data');
@@ -139,7 +127,7 @@ const Media = () => {
 
       <div className="form-fields">
         <div className="mb-4">
-          <label htmlFor="description" className="block text-[#006D5B] mb-2">Event Title and Date</label>
+          <label htmlFor="description" className="block text-[#006D5B] mb-2">Event Description</label>
           <textarea
             id="description"
             value={description}

@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
-import CryptoJS from 'crypto-js';
-import axios from 'axios';
 
 const LEADERSHIP_URL = "https://arkad-server.onrender.com/users/leaders";
-const key = process.env.REACT_APP_SECRET_KEY;
 
 const Leadership = () => {
   const [image, setImage] = useState(null);
@@ -67,44 +64,36 @@ const Leadership = () => {
       setError('Please fill out all fields and upload an image.');
       return;
     }
-    if (!token || !key || !userId) return;
+    if (!token || !userId) return;
     setLoading(true);
 
     try {
-      const dataToEncrypt = {
-        userId,
-        name,
-        role,
-      };
-
-      const dataStr = JSON.stringify(dataToEncrypt);
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(key), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC,
-      }).toString();
 
       const payload = new FormData();
-      payload.append('iv', iv);
-      payload.append('ciphertext', encryptedData);
-      payload.append('image', image); // Append image file
+      payload.append('userId', userId);
+      payload.append('name', name);
+      payload.append('role', role);
+      payload.append('image', image);
 
-      const response = await axios.post(LEADERSHIP_URL, payload, {
+      const response = await fetch(LEADERSHIP_URL, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
+        body: JSON.stringify(payload)
       });
 
-      if (response.data.success) {
+      const res = await response.json();
+
+      if (res.success) {
         setName('');
         setRole('');
         setImage(null);
-        setMessage(response.data.message);
+        setMessage(res.message);
         setTimeout(() => setMessage(''), 5000);
       } else {
-        setError(response.data.message);
+        setError(res.message);
         setTimeout(() => setError(''), 5000);
       }
     } catch (error) {

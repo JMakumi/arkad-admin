@@ -26,14 +26,17 @@ const Members = () => {
     if(!token) return;
     setLoading(true);
     try {
-      const response = await axios.get(MEMBER_URL, {
+      const response = await fetch(MEMBER_URL, {
+        method: "GET",
         headers:{
           Authorization: `Bearer ${token}`
         }
       });
 
-      if(response.data.success){
-        const { ciphertext, iv } = response.data.data;
+      const res = await response.json();
+
+      if(res.success){
+        const { ciphertext, iv } = res.data;
 
         const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
           iv: CryptoJS.enc.Hex.parse(iv),

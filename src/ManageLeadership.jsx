@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 import imageCompression from 'browser-image-compression';
 
 const LEADERSHIP_URL = "https://arkad-server.onrender.com/users/leaders";
-const key = process.env.REACT_APP_SECRET_KEY;
 
 const ManageLeadership = () => {
   const [leadership, setLeadership] = useState([]);
@@ -33,27 +30,23 @@ const ManageLeadership = () => {
   }, [token]);
 
   const fetchData = async () => {
-    if(!token || !key) return;
+    if(!token) return;
     setLoading(true);
     try {
-      const response = await axios.get(LEADERSHIP_URL, {
+      const response = await fetch(LEADERSHIP_URL, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      
-      if(response.data.success){
-        const { ciphertext, iv } = response.data.data;
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-          iv: CryptoJS.enc.Hex.parse(iv),
-          padding: CryptoJS.pad.Pkcs7,
-          mode: CryptoJS.mode.CBC,
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
 
-        const decryptedMembers = JSON.parse(decryptedData);
-        setLeadership(decryptedMembers.length > 0 ? decryptedMembers : []);
+      const res = await response.json();
+      
+      if(res.success){
+        setLeadership(res.data);
+      }else{
+        setMessage("You have no leaders yet");
+        setTimeout(() => setMessage(""), 5000);
       }
     } catch (error) {
       setMessage(`There was an error: ${error}`);
@@ -108,7 +101,7 @@ const ManageLeadership = () => {
   };
 
   const handleSubmit = async (id) => {
-    if (!token || !key) return;
+    if (!token) return;
     setIsLoading(true);
     try {
       const dataToUpdate = editedLeadership[id];
@@ -119,32 +112,33 @@ const ManageLeadership = () => {
 
       // Encrypt the name, role, and description
       const { name, role, description } = dataToUpdate;
-      const dataStr = JSON.stringify({ name, role, description });
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(key), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC,
-      }).toString();
 
-      formData.set('iv', iv);
-      formData.set('ciphertext', encryptedData);
+      formData.set('name', name);
+      formData.set('role', role);
+      formData.set('description', description);
 
-      await axios.put(`${LEADERSHIP_URL}/${id}`, formData, {
+      const response = await fetch(`${LEADERSHIP_URL}/${id}`, {
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
+        body: JSON.stringify(formData)
       });
 
-      fetchData()
-      setIsEditing({});
-      setEditedLeadership((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-      setOpenMenuId(null);
+      const res = await response.json();
+
+      if(res.success){
+        fetchData()
+        setIsEditing({});
+        setEditedLeadership((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+        setOpenMenuId(null);
+      }
+      
     } catch (error) {
       console.error('Error updating leadership member:', error);
     } finally{
@@ -153,16 +147,21 @@ const ManageLeadership = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!token || !key) return;
+    if (!token) return;
     setIsLoading(true);
     try {
       if (window.confirm('Are you sure you want to delete this leader? This action is irreversible.')) {
-        await axios.delete(`${LEADERSHIP_URL}/${id}`, {
+        const response = await fetch(`${LEADERSHIP_URL}/${id}`, {
+          method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        setLeadership((prev) => prev.filter((item) => item.id !== id));
-        fetchData()
+        const res = await response.json();
+
+        if(res.success){
+          setLeadership((prev) => prev.filter((item) => item.id !== id));
+          fetchData()
+        }
       }
     } catch (error) {
       console.error('Error deleting leader:', error);

@@ -143,7 +143,7 @@ const Dashboard = ({ userRole, onLogout }) => {
       </Link>
       <Link to="/partners" className="flex items-center space-x-2 hover:text-[#FFD700]">
         <FaHandshake className="text-xl" />
-        <span>Partners</span>
+        <span>Partnership Requests</span>
       </Link>
       <Link to="/newsletter" className="flex items-center space-x-2 hover:text-[#FFD700]">
         <FaNewspaper className="text-xl" />
@@ -151,7 +151,7 @@ const Dashboard = ({ userRole, onLogout }) => {
       </Link>
       <Link to="/contact-us" className="flex items-center space-x-2 hover:text-[#FFD700]">
         <FaEnvelope className="text-xl" />
-        <span>Contact Us</span>
+        <span>Messages</span>
       </Link>
       <Link to="/change-password" className="flex items-center space-x-2 hover:text-[#FFD700]">
         <FaCogs className="text-xl" />

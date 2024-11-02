@@ -73,7 +73,7 @@ const Newsletter = () => {
       if(result.success){
         setContent("");
         setTitle("");
-        setSources("");
+        setSources([]);
         setMessage(result.message);
         setTimeout(() => setMessage(""), 5000);
       }else{
@@ -125,7 +125,7 @@ const Newsletter = () => {
 
       <div className="mb-4">
         <label className="block text-[#006D5B] font-bold mb-2" htmlFor="sources">
-          Sources (separated by commas)
+          References (separated by commas)
         </label>
         <input
           type="text"

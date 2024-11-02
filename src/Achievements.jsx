@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 
 const ACHIEVEMENTS_URL = "https://arkad-server.onrender.com/users/achievement";
-const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 const Achievements = () => {
   const [image, setImage] = useState(null);
@@ -24,7 +21,7 @@ const Achievements = () => {
     const storedAccessToken = localStorage.getItem('accessToken');
     const userData = localStorage.getItem("userData");
     if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
-    if (userData) setUserId(JSON.parse(userData).id)
+    if (userData) setUserId(JSON.parse(userData).id);
   }, []);
 
   const onDrop = async (acceptedFiles) => {
@@ -35,8 +32,6 @@ const Achievements = () => {
     }
   
     const file = acceptedFiles[0];
-  
-    // Extract the file name and extension
     const fileName = file.name;
   
     if (file.size > 400 * 1024) {
@@ -49,7 +44,6 @@ const Achievements = () => {
   
         const compressedBlob = await imageCompression(file, options);
   
-        // Create a new File object with the original name and extension
         const compressedFile = new File([compressedBlob], fileName, {
           type: file.type,
           lastModified: Date.now(),
@@ -68,7 +62,6 @@ const Achievements = () => {
       setError('');
     }
   };
-  
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
@@ -82,41 +75,30 @@ const Achievements = () => {
       setTimeout(() => setError(""), 5000);
       return;
     }
-    if(!token || !secretKey || !userId) return
+    if(!token || !userId) return;
     setLoading(true);
 
     try {
-      const dataToEncrypt = {
-        description: description,
-        venue: venue,
-        date: date,
-        userId: userId
-      };
+      const formData = new FormData();
+      formData.append("description", description);
+      formData.append("venue", venue);
+      formData.append("date", date);
+      formData.append("userId", userId);
+      formData.append("image", image);
 
-      const dataStr = JSON.stringify(dataToEncrypt);
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC
-      }).toString();
-
-      const payload = new FormData();
-      payload.append("iv", iv);
-      payload.append("ciphertext", encryptedData);
-      payload.append("image", image); 
-
-      Object.entries(payload).forEach(([key, value]) => console.log(`${key} : ${JSON.stringify(value)}`));
-
-      const response = await axios.post(ACHIEVEMENTS_URL, payload, {
+      const response = await fetch(ACHIEVEMENTS_URL, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
-        },
-      });
+        }, 
+        body: JSON.stringify(formData)
+      },);
 
-      if (response.data.success) {
-        setSuccess(response.data.message);
+      const result = await response.json()
+
+      if (result.success) {
+        setSuccess(result.message);
         setTimeout(() => setSuccess(""), 5000);
         setDescription('');
         setVenue('');
@@ -124,7 +106,7 @@ const Achievements = () => {
         setImage(null);
         setCompressedSize(null);
       } else {
-        setError(response.data.message);
+        setError(result.message);
         setTimeout(() => setError(""), 5000);
       }
     } catch (error) {
@@ -134,6 +116,9 @@ const Achievements = () => {
       setLoading(false);
     }
   };
+
+  // Get today's date in 'YYYY-MM-DD' format for date picker restriction
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <div className="p-8">
@@ -182,6 +167,7 @@ const Achievements = () => {
             id="date"
             type="date"
             value={date}
+            max={today} // Restrict to past dates
             onChange={(e) => setDate(e.target.value)}
             className="w-full p-2 border border-[#006D5B] rounded"
             required

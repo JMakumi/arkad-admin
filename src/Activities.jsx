@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import { FaUpload } from 'react-icons/fa';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 
 const ACTIVITIES_URL = "https://arkad-server.onrender.com/users/activities";
-const secretKey = process.env.REACT_APP_SECRET_KEY;
 
 const Activities = () => {
   const [image, setImage] = useState(null);
@@ -77,39 +74,30 @@ const Activities = () => {
       setTimeout(() => setError(""), 5000);
       return;
     }
-    if (!token || !secretKey || !userId) return;
+    if (!token || !userId) return;
     setLoading(true);
 
     try {
-      const dataToEncrypt = {
-        title: title,
-        venue: venue,
-        date: date,
-        userId: userId
-      };
-
-      const dataStr = JSON.stringify(dataToEncrypt);
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC
-      }).toString();
-
       const payload = new FormData();
-      payload.append("iv", iv);
-      payload.append("ciphertext", encryptedData);
-      payload.append("image", image); 
+      payload.append("title", title);
+      payload.append("venue", venue);
+      payload.append("date", date);
+      payload.append("userId", userId);
+      payload.append("image", image);
 
-      const response = await axios.post(ACTIVITIES_URL, payload, {
+      const response = await fetch(ACTIVITIES_URL, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         },
+        body: JSON.stringify(payload)
       });
 
-      if (response.data.success) {
-        setSuccess(response.data.message);
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message);
         setTimeout(() => setSuccess(""), 5000);
         setTitle('');
         setVenue('');
@@ -117,7 +105,7 @@ const Activities = () => {
         setImage(null);
         setCompressedSize(null);
       } else {
-        setError(response.data.message);
+        setError(result.message);
         setTimeout(() => setError(""), 5000);
       }
     } catch (error) {
@@ -127,6 +115,9 @@ const Activities = () => {
       setLoading(false);
     }
   };
+
+  // Get current date in YYYY-MM-DD format for date picker
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="p-8">
@@ -178,6 +169,7 @@ const Activities = () => {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className="w-full p-2 border border-[#006D5B] rounded"
+            min={today}  // Restrict to today and future dates
             required
           />
         </div>

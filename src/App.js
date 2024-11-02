@@ -93,14 +93,6 @@ const App = () => {
               <div>
                 <h1 className="text-2xl">Welcome to the Dashboard</h1>
               </div>
-              {userData && (
-                <div className="flex items-center space-x-2">
-                  <FaUserCircle className="text-3xl text-[#006D5B]" />
-                  <span className="text-gray-700">
-                    You're logged in as <strong>{userData.name}</strong> ({userRole})
-                  </span>
-                </div>
-              )}
             </header>
             <Routes>
               <Route path="/home" element={<Home />} />

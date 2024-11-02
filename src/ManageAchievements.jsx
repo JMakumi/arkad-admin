@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 import imageCompression from 'browser-image-compression';
 
 const ACHIEVEMENTS_URL = "https://arkad-server.onrender.com/users/achievement";
-const key = process.env.REACT_APP_SECRET_KEY;
 
 const ManageAchievements = () => {
   const [activities, setActivities] = useState([]);
@@ -32,30 +29,26 @@ const ManageAchievements = () => {
   }, [token]);
 
   const getAchievements = async () => {
-    if (!token || !key) return;
+    if (!token) return;
     setLoading(true);
 
     try {
-      const response = await axios.get(ACHIEVEMENTS_URL, {
+      const response = await fetch(ACHIEVEMENTS_URL, {
+        method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.data.success) {
-        const { ciphertext, iv } = response.data.data;
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-          iv: CryptoJS.enc.Hex.parse(iv),
-          padding: CryptoJS.pad.Pkcs7,
-          mode: CryptoJS.mode.CBC,
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
+      const result = await response.json()
 
-        const decryptedMembers = JSON.parse(decryptedData);
-        setActivities(decryptedMembers.length > 0 ? decryptedMembers : []);
+      if (result.success) {
+        setActivities(result.data);
+      }else{
+        setMessage("There are no recent events");
+        setTimeout(() => setMessage(""), 5000);
       }
     } catch (error) {
       console.error('Error getting achievements:', error);
-      setMessage('Error fetching achievements: ' + error.message);
+      setMessage('There are no recent events');
       setTimeout(() => setMessage(""), 5000);
     } finally {
       setLoading(false);
@@ -98,7 +91,7 @@ const ManageAchievements = () => {
   };
 
   const handleSubmit = async (id) => {
-    if(!token || !key) return;
+    if(!token) return;
     setIsLoading(true);
     try {
       const dataToUpdate = editedActivities[id];
@@ -107,29 +100,31 @@ const ManageAchievements = () => {
 
       // Encrypt the description, venue, and date
       const { description, venue, date } = dataToUpdate;
-      const dataStr = JSON.stringify({ description, venue, date });
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(key), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC,
-      }).toString();
+      
 
-      formData.set('iv', iv);
-      formData.set('ciphertext', encryptedData);
+      formData.set('description', description);
+      formData.set('venue', venue);
+      formData.set('date', date);
 
-      await axios.put(`${ACHIEVEMENTS_URL}/${id}`, formData, {
+      const response = await fetch(`${ACHIEVEMENTS_URL}/${id}`, {
+        method: "PUT",
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        body: JSON.stringify(formData)
       });
 
-      getAchievements();
-      setIsEditing({});
-      setEditedActivities((prev) => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
-      setOpenMenuId(null);
+      const result = await response.json();
+
+      if(result.success){
+        getAchievements();
+        setIsEditing({});
+        setEditedActivities((prev) => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+        setOpenMenuId(null);
+      }
+
     } catch (error) {
       console.error('Error updating activity:', error);
     } finally{
@@ -142,11 +137,18 @@ const ManageAchievements = () => {
     setIsLoading(true);
     try {
       if (window.confirm('Are you sure you want to delete this achievement? This action is irreversible.')) {
-        await axios.delete(`${ACHIEVEMENTS_URL}/${id}`, {
+        const response = await fetch(`${ACHIEVEMENTS_URL}/${id}`, {
+          method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
-        setActivities((prev) => prev.filter((activity) => activity.id !== id));
-        getAchievements();
+
+        const result = await response.json();
+
+        if(result.success){
+          setActivities((prev) => prev.filter((activity) => activity.id !== id));
+          getAchievements();
+        }
+        
       }
     } catch (error) {
       console.error('Error deleting activity:', error);

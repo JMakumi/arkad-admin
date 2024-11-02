@@ -163,12 +163,7 @@ const Membership = () => {
                 <th className="py-2 px-4 border">Profile</th>
                 <th className="py-2 px-4 border">Email</th>
                 <th className="py-2 px-4 border">Phone Number</th>
-                <th className="py-2 px-4 border">Gender</th>
-                <th className="py-2 px-4 border">Location</th>
-                <th className="py-2 px-4 border">Age</th>
-                <th className="py-2 px-4 border">Nationality</th>
                 <th className="py-2 px-4 border">Membership Number</th>
-                <th className="py-2 px-4 border">Reason For Joining</th>
                 <th className="py-2 px-4 border">Actions</th>
               </tr>
             </thead>
@@ -176,16 +171,11 @@ const Membership = () => {
               {members.map((member) => (
                 <tr key={member.id}>
                   <td className="py-2 px-4 border">
-                    {member.firstName} {member.middleName ? member.middleName + ' ' : ''}{member.lastName}
+                    {member.fullName}
                   </td>
                   <td className="py-2 px-4 border">{member.email}</td>
                   <td className="py-2 px-4 border">{member.phoneNumber}</td>
-                  <td className="py-2 px-4 border">{member.gender}</td>
-                  <td className="py-2 px-4 border">{member.location}</td>
-                  <td className="py-2 px-4 border">{member.age}</td>
-                  <td className="py-2 px-4 border">{member.nationality}</td>
                   <td className="py-2 px-4 border">{member.memberNumber}</td>
-                  <td className="py-2 px-4 border">{member.reasonForJoining}</td>
                   <td className="py-2 px-4 border relative">
                     <FaEllipsisH
                       onClick={() => setShowActions(showActions === member.id ? null : member.id)}

@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
 
 const MEDIA_URL = "https://arkad-server.onrender.com/users/media";
-const key = process.env.REACT_APP_SECRET_KEY;
 
 const ManageMedia = () => {
   const [mediaItems, setMediaItems] = useState([]);
@@ -27,26 +24,22 @@ const ManageMedia = () => {
   }, [token]);
 
   const getMedia = async () => {
-    if (!token || !key) return;
+    if (!token) return;
     setLoading(true);
 
     try {
-      const response = await axios.get(MEDIA_URL, {
+      const response = await fetch(MEDIA_URL, {
+        method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.data.success) {
-        const { ciphertext, iv } = response.data.data;
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-          iv: CryptoJS.enc.Hex.parse(iv),
-          padding: CryptoJS.pad.Pkcs7,
-          mode: CryptoJS.mode.CBC,
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
+      const result = await response.json();
 
-        const decryptedMedia = JSON.parse(decryptedData);
-        setMediaItems(decryptedMedia.length > 0 ? decryptedMedia : []);
+      if (result.success) {
+        setMediaItems(result.data);
+      }else{
+        setMessage("You have no media currently");
+        setTimeout(() => setMessage(""), 5000);
       }
     } catch (error) {
       console.error('Error getting media:', error);
@@ -75,7 +68,8 @@ const ManageMedia = () => {
     setIsLoading(true);
     try {
       if (window.confirm('Are you sure you want to delete this media item? This action is irreversible.')) {
-        await axios.delete(`${MEDIA_URL}/${id}`, {
+        await fetch(`${MEDIA_URL}/${id}`, {
+          method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
         setMediaItems((prev) => prev.filter((item) => item.id !== id));
