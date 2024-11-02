@@ -12,17 +12,23 @@ const Dashboard = ({ userRole, onLogout, userName }) => {
   const [mediaOpen, setMediaOpen] = useState(false);
   const [membershipOpen, setMembershipOpen] = useState(false);
   const [leadershipOpen, setLeadershipOpen] = useState(false);
+  const [userData, setUserData] = useState('');
 
   const toggleDropdown = (setDropdownState, dropdownState) => {
     setDropdownState(!dropdownState);
   };
+
+  useEffect(() => {
+    const userData = localStorage.getItem("userData");
+    if(userData) setUserData(userData.name)
+  }, []);
 
   return (
     <nav className="flex flex-col space-y-4">
       {/* Profile Section */}
       <div className="flex flex-col items-center mb-6">
         <FaUserCircle className="text-6xl text-[#FFD700]" />
-        <h2 className="text-xl font-bold mt-2">Welcome, {userName}!</h2>
+        <h2 className="text-xl font-bold mt-2">Welcome, {userData}!</h2>
         <button
           onClick={onLogout}
           className="mt-3 bg-gradient-to-r from-red-600 to-red-800 text-white px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105"
