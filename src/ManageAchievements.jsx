@@ -109,7 +109,7 @@ const ManageAchievements = () => {
       const response = await fetch(`${ACHIEVEMENTS_URL}/${id}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
-        body: JSON.stringify(formData)
+        body: formData
       });
 
       const result = await response.json();
