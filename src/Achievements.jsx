@@ -77,7 +77,7 @@ const Achievements = () => {
     }
     if(!token || !userId) return;
     setLoading(true);
-
+  
     try {
       const formData = new FormData();
       formData.append("description", description);
@@ -85,18 +85,17 @@ const Achievements = () => {
       formData.append("date", date);
       formData.append("userId", userId);
       formData.append("image", image);
-
+  
       const response = await fetch(ACHIEVEMENTS_URL, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }, 
-        body: JSON.stringify(formData)
-      },);
-
-      const result = await response.json()
-
+        },
+        body: formData,
+      });
+  
+      const result = await response.json();
+  
       if (result.success) {
         setSuccess(result.message);
         setTimeout(() => setSuccess(""), 5000);
@@ -116,6 +115,7 @@ const Achievements = () => {
       setLoading(false);
     }
   };
+  
 
   // Get today's date in 'YYYY-MM-DD' format for date picker restriction
   const today = new Date().toISOString().split("T")[0];
