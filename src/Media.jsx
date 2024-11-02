@@ -81,10 +81,8 @@ const Media = () => {
       const response = await fetch(MEDIA_URL, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-        body: JSON.stringify(payload)
+          Authorization: `Bearer ${token}`},
+        body: payload
       });
 
       const result = await response.json();
