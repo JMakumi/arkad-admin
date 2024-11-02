@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FaTasks, FaImages, FaHandsHelping, FaDonate, FaEnvelope, FaUserFriends, FaHandshake,
-  FaNewspaper, FaCogs, FaUserTie, FaChevronDown, FaChevronRight,
+  FaNewspaper, FaCogs, FaUserTie, FaChevronDown, FaChevronRight, FaUserCircle,
 } from 'react-icons/fa';
 
-const Dashboard = ({ userRole, onLogout }) => {
+const Dashboard = ({ userRole, onLogout, userName }) => {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -19,9 +19,24 @@ const Dashboard = ({ userRole, onLogout }) => {
 
   return (
     <nav className="flex flex-col space-y-4">
+      {/* Profile Section */}
+      <div className="flex flex-col items-center mb-6">
+        <FaUserCircle className="text-6xl text-[#FFD700]" />
+        <h2 className="text-xl font-bold mt-2">Welcome, {userName}!</h2>
+        <button
+          onClick={onLogout}
+          className="mt-3 bg-gradient-to-r from-red-600 to-red-800 text-white px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-transform transform hover:scale-105"
+        >
+          Logout
+        </button>
+      </div>
+
       {/* Achievements Dropdown */}
       <div>
-        <div onClick={() => toggleDropdown(setAchievementsOpen, achievementsOpen)} className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]">
+        <div
+          onClick={() => toggleDropdown(setAchievementsOpen, achievementsOpen)}
+          className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]"
+        >
           <FaTasks className="text-xl" />
           <span>Achievements</span>
           {achievementsOpen ? <FaChevronDown /> : <FaChevronRight />}
@@ -36,7 +51,10 @@ const Dashboard = ({ userRole, onLogout }) => {
 
       {/* Activities Dropdown */}
       <div>
-        <div onClick={() => toggleDropdown(setActivitiesOpen, activitiesOpen)} className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]">
+        <div
+          onClick={() => toggleDropdown(setActivitiesOpen, activitiesOpen)}
+          className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]"
+        >
           <FaTasks className="text-xl" />
           <span>Activities</span>
           {activitiesOpen ? <FaChevronDown /> : <FaChevronRight />}
@@ -51,7 +69,10 @@ const Dashboard = ({ userRole, onLogout }) => {
 
       {/* Media Dropdown */}
       <div>
-        <div onClick={() => toggleDropdown(setMediaOpen, mediaOpen)} className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]">
+        <div
+          onClick={() => toggleDropdown(setMediaOpen, mediaOpen)}
+          className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]"
+        >
           <FaImages className="text-xl" />
           <span>Media</span>
           {mediaOpen ? <FaChevronDown /> : <FaChevronRight />}
@@ -66,7 +87,10 @@ const Dashboard = ({ userRole, onLogout }) => {
 
       {/* Membership Dropdown */}
       <div>
-        <div onClick={() => toggleDropdown(setMembershipOpen, membershipOpen)} className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]">
+        <div
+          onClick={() => toggleDropdown(setMembershipOpen, membershipOpen)}
+          className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]"
+        >
           <FaUserFriends className="text-xl" />
           <span>Membership</span>
           {membershipOpen ? <FaChevronDown /> : <FaChevronRight />}
@@ -75,14 +99,19 @@ const Dashboard = ({ userRole, onLogout }) => {
           <div className="pl-8">
             <Link to="/members" className="block py-2 hover:text-[#FFD700]">Members</Link>
             <Link to="/membership" className="block py-2 hover:text-[#FFD700]">Membership Requests</Link>
-            {userRole === 'super-admin' && <Link to="/signup" className="block py-2 hover:text-[#FFD700]">Create New User</Link>}
+            {userRole === 'super-admin' && (
+              <Link to="/signup" className="block py-2 hover:text-[#FFD700]">Create New User</Link>
+            )}
           </div>
         )}
       </div>
 
       {/* Leadership Dropdown */}
       <div>
-        <div onClick={() => toggleDropdown(setLeadershipOpen, leadershipOpen)} className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]">
+        <div
+          onClick={() => toggleDropdown(setLeadershipOpen, leadershipOpen)}
+          className="flex items-center space-x-2 cursor-pointer hover:text-[#FFD700]"
+        >
           <FaUserTie className="text-xl" />
           <span>Leadership</span>
           {leadershipOpen ? <FaChevronDown /> : <FaChevronRight />}
@@ -120,13 +149,6 @@ const Dashboard = ({ userRole, onLogout }) => {
         <FaCogs className="text-xl" />
         <span>Change Password</span>
       </Link>
-
-      {/* Profile and Logout */}
-      <div className="flex items-center mt-4 space-x-2">
-        <button onClick={onLogout} className="bg-red-600 px-4 py-2 rounded hover:bg-red-800">
-          Logout
-        </button>
-      </div>
     </nav>
   );
 };
