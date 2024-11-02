@@ -20,9 +20,8 @@ const Dashboard = ({ userRole, onLogout }) => {
 
   useEffect(() => {
     const storedUserData = JSON.parse(localStorage.getItem('userData'));
-
-    if (storedAccessToken && storedUserData) {
-      setUserData(storedUserData.name);
+    if (storedUserData) {
+      setUserData(storedUserData);
     }
   }, []);
 
