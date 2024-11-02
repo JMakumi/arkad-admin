@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import CryptoJS from 'crypto-js';
-
-const secretKey = process.env.REACT_APP_SECRET_KEY;
 const CHANGE_PASSWORD_URL = "https://arkad-server.onrender.com/users/change-password";
 
 const ChangePassword = () => {
@@ -89,22 +86,14 @@ const ChangePassword = () => {
     };
 
     try {
-      const dataStr = JSON.stringify(dataToEncrypt);
-      const iv = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
-      const encryptedData = CryptoJS.AES.encrypt(dataStr, CryptoJS.enc.Utf8.parse(secretKey), {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        padding: CryptoJS.pad.Pkcs7,
-        mode: CryptoJS.mode.CBC,
-      }).toString();
-
-      const payload = { iv, ciphertext: encryptedData };
 
       const response = await fetch(CHANGE_PASSWORD_URL, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(dataToEncrypt)
       });
 
       const res = await response.json();
