@@ -25,6 +25,7 @@ import Dashboard from './Dashboard';
 import UserManagement from './Users';
 import './App.css';
 
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
@@ -32,12 +33,14 @@ const App = () => {
   const [isInactive, setIsInactive] = useState(false);
   const navigate = useNavigate();
 
+  // Function to handle login and immediately update access control
   const handleLogin = useCallback((role, data) => {
     setIsAuthenticated(true);
     setUserRole(role);
     setUserData(data);
   }, []);
 
+  // Log out and reset states
   const handleLogout = useCallback(() => {
     setIsAuthenticated(false);
     setUserRole(null);
@@ -47,25 +50,7 @@ const App = () => {
     navigate('/login');
   }, [navigate]);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const handleInactivity = () => setIsInactive(true);
-      const resetInactivityTimer = () => setIsInactive(false);
-
-      const activityEvents = ['click', 'mousemove', 'keydown'];
-      activityEvents.forEach(event => window.addEventListener(event, resetInactivityTimer));
-      
-      const inactivityTimer = setTimeout(handleInactivity, 120000); // 60 seconds
-
-      if (isInactive) handleLogout();
-
-      return () => {
-        clearTimeout(inactivityTimer);
-        activityEvents.forEach(event => window.removeEventListener(event, resetInactivityTimer));
-      };
-    }
-  }, [isAuthenticated, isInactive, handleLogout]);
-
+  // Update states if access token is already available in local storage on page load
   useEffect(() => {
     const storedAccessToken = localStorage.getItem('accessToken');
     const storedUserData = JSON.parse(localStorage.getItem('userData'));
@@ -82,45 +67,15 @@ const App = () => {
       {isAuthenticated ? (
         <div className="flex flex-1 bg-white text-gray-900">
           <aside className="bg-[#006D5B] text-white w-64 p-4">
-            <Dashboard
-              userRole={userRole}
-              onLogout={handleLogout}
-            />
+            <Dashboard userRole={userRole} onLogout={handleLogout} />
           </aside>
 
           <main className="flex-1 p-6">
             <header className="flex justify-between items-center mb-4">
-              <div>
-                <h1 className="text-2xl">Welcome to the Dashboard</h1>
-              </div>
+              <h1 className="text-2xl">Welcome to the Dashboard</h1>
             </header>
-            <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/achievements" element={<Achievements />} />
-              <Route path="/manage-achievements" element={<ManageAchievements />} />
-              <Route path="/activities" element={<Activities />} />
-              <Route path="/manage-activities" element={<ManageActivities />} />
-              <Route path="/media" element={<Media />} />
-              <Route path="/manage-media" element={<ManageMedia />} />
-              <Route path="/volunteer" element={<Volunteer />} />
-              <Route path="/donation" element={<Donations />} />
-              <Route path="/leadership" element={<Leadership />} />
-              <Route path="/manage-leadership" element={<ManageLeadership />} />
-              <Route path="/membership" element={<Membership />} />
-              <Route path="/members" element={<Members />} />
-              <Route path="/partners" element={<Partners />} />
-              <Route path="/newsletter" element={<Newsletter />} />
-              <Route path="/contact-us" element={<ContactUs />} />
-              <Route path="/change-password" element={<ChangePassword />} />
-              {/* Only allow super-admin to access signup */}
-              {userRole === 'super-admin' && <Route path="/signup" element={<Signup />} />}
-              {userRole === 'super-admin' && <Route path="/remove-user" element={<UserManagement />} />}
-              {userRole === 'super-admin' || userRole === 'admin' ? (
-                <Route path="*" element={<Navigate to="/home" />} />
-              ) : (
-                <Route path="*" element={<Navigate to="/login" />} />
-              )}
-            </Routes>
+            {/* Pass userRole and isAuthenticated to the Routes component */}
+            <AuthRoutes userRole={userRole} isAuthenticated={isAuthenticated} />
           </main>
         </div>
       ) : (
@@ -135,4 +90,35 @@ const App = () => {
   );
 };
 
+// A separate component for routes that can dynamically check for userRole and isAuthenticated
+const AuthRoutes = ({ userRole, isAuthenticated }) => (
+  <Routes>
+    <Route path="/home" element={<Home />} />
+    <Route path="/achievements" element={<Achievements />} />
+    <Route path="/manage-achievements" element={<ManageAchievements />} />
+    <Route path="/activities" element={<Activities />} />
+    <Route path="/manage-activities" element={<ManageActivities />} />
+    <Route path="/media" element={<Media />} />
+    <Route path="/manage-media" element={<ManageMedia />} />
+    <Route path="/volunteer" element={<Volunteer />} />
+    <Route path="/donation" element={<Donations />} />
+    <Route path="/leadership" element={<Leadership />} />
+    <Route path="/manage-leadership" element={<ManageLeadership />} />
+    <Route path="/membership" element={<Membership />} />
+    <Route path="/members" element={<Members />} />
+    <Route path="/partners" element={<Partners />} />
+    <Route path="/newsletter" element={<Newsletter />} />
+    <Route path="/contact-us" element={<ContactUs />} />
+    <Route path="/change-password" element={<ChangePassword />} />
+    
+    {/* Role-based access control for admin-only and super-admin-only routes */}
+    {userRole === 'super-admin' && <Route path="/signup" element={<Signup />} />}
+    {userRole === 'super-admin' && <Route path="/remove-user" element={<UserManagement />} />}
+    
+    {/* Redirect based on authentication and role */}
+    <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} />} />
+  </Routes>
+);
+
 export default App;
+
