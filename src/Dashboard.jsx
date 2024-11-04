@@ -107,9 +107,6 @@ const Dashboard = ({ userRole, onLogout }) => {
           <div className="pl-8">
             <Link to="/members" className="block py-2 hover:text-[#FFD700]">Members</Link>
             <Link to="/membership" className="block py-2 hover:text-[#FFD700]">Membership Requests</Link>
-            {userRole === 'super-admin' && (
-              <Link to="/signup" className="block py-2 hover:text-[#FFD700]">Create New User</Link>
-            )}
           </div>
         )}
       </div>
