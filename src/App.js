@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa';
 import Home from './Home';
 import Achievements from './Achievements';
 import Activities from './Activities';
@@ -23,6 +22,7 @@ import ManageLeadership from './ManageLeadership';
 import ForgotPassword from './ForgotPassword';
 import ChangePassword from './ChangePassword';
 import Dashboard from './Dashboard'; 
+import UserManagement from './Users';
 import './App.css';
 
 const App = () => {
@@ -114,6 +114,7 @@ const App = () => {
               <Route path="/change-password" element={<ChangePassword />} />
               {/* Only allow super-admin to access signup */}
               {userRole === 'super-admin' && <Route path="/signup" element={<Signup />} />}
+              {userRole === 'super-admin' && <Route path="/remove-user" element={<UserManagement />} />}
               {userRole === 'super-admin' || userRole === 'admin' ? (
                 <Route path="*" element={<Navigate to="/home" />} />
               ) : (

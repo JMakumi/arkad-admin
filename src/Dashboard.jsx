@@ -138,6 +138,12 @@ const Dashboard = ({ userRole, onLogout }) => {
           <span>Create User</span>
         </Link>
       )}
+      {role === 'super-admin' && (
+        <Link to="/remove-user" className="flex items-center space-x-2 hover:text-[#FFD700]">
+          <FaHandsHelping className="text-xl" />
+          <span>Users</span>
+        </Link>
+      )}
       <Link to="/volunteer" className="flex items-center space-x-2 hover:text-[#FFD700]">
         <FaHandsHelping className="text-xl" />
         <span>Volunteer</span>
