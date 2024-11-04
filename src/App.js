@@ -112,9 +112,9 @@ const App = () => {
               <Route path="/newsletter" element={<Newsletter />} />
               <Route path="/contact-us" element={<ContactUs />} />
               <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              {userRole === 'admin' && <Route path="/signup" element={<Signup />} />}
-              {userRole === 'admin' || userRole === 'super-admin' ? (
+              {/* Only allow super-admin to access signup */}
+              {userRole === 'super-admin' && <Route path="/signup" element={<Signup />} />}
+              {userRole === 'super-admin' || userRole === 'admin' ? (
                 <Route path="*" element={<Navigate to="/home" />} />
               ) : (
                 <Route path="*" element={<Navigate to="/login" />} />
