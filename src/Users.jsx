@@ -99,6 +99,7 @@ const UserManagement = () => {
               <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Last Name</th>
               <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Username</th>
               <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Role</th>
+              <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Status</th>
               <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Created At</th>
               <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Updated At</th>
               <th className="px-4 py-2 border-b border-gray-200 text-left font-semibold text-gray-600">Action</th>
@@ -112,6 +113,7 @@ const UserManagement = () => {
                 <td className="px-4 py-2 border-b border-gray-200">{user.lastName}</td>
                 <td className="px-4 py-2 border-b border-gray-200">{user.username}</td>
                 <td className="px-4 py-2 border-b border-gray-200">{user.role}</td>
+                <td className="px-4 py-2 border-b border-gray-200">{user.status}</td>
                 <td className="px-4 py-2 border-b border-gray-200">
                     {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </td>
