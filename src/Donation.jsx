@@ -1,96 +1,192 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import logo from './images/logo.png'; // Assuming you have a logo in this path
+
+const DONATION_URL = "https://arkad-server.onrender.com/users/donations";
 
 const Donations = () => {
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('254');
+  const [amount, setAmount] = useState('');
+  const [mpesaReceiptNumber, setMpesaReceiptNumber] = useState('');
   const [donations, setDonations] = useState([]);
-  const currentDate = new Date();
-  const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
-  const currentYear = currentDate.getFullYear();
+  const [startDate, setStartDate] = useState('');
+  const [token, setToken] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [load, setLoad] = useState(false);
 
   useEffect(() => {
-    // Fetch the donation data (using dummy data here for demonstration)
-    const fetchData = async () => {
-      try {
-        // const response = await axios.get('https://localhost:4000/donations');
-        // const data = response.data;
-
-        // Dummy data since the endpoint is not available
-        const data = [
-          { fullName: 'John Doe', email: 'johndoe@example.com', phoneNumber: '0748800714', type: 'MPESA', amount: '5000', transactionCode: 'XYZ123', status: 'pending', date: '2024-08-30 14:30:00' },
-          { fullName: 'Jane Smith', email: 'janesmith@example.com', phoneNumber: '0748800715', type: 'RTGS', amount: '10000', transactionCode: 'XYZ124', status: 'completed', date: '2024-08-29 10:45:00' },
-          { fullName: 'Alice Johnson', email: 'alicejohnson@example.com', phoneNumber: '0748800716', type: 'Airtel Money', amount: '2500', transactionCode: 'XYZ125', status: 'pending', date: '2024-08-28 09:15:00' },
-          { fullName: 'Bob Brown', email: 'bobbrown@example.com', phoneNumber: '0748800717', type: 'Bank', amount: '20000', transactionCode: 'XYZ126', status: 'completed', date: '2024-08-27 16:00:00' },
-        ];
-
-        setDonations(data);
-      } catch (error) {
-        console.error('Error fetching donations:', error);
-      }
-    };
-
-    fetchData();
+    const storedAccessToken = localStorage.getItem('accessToken');
+    if (storedAccessToken) setToken(JSON.parse(storedAccessToken));
   }, []);
 
-  const handleDownloadPDF = () => {
-    const doc = new jsPDF();
+  // Handle submitting new donation
+  const handleSubmit = async () => {
+    if(!token) return;
+    if (fullName && phoneNumber && amount && mpesaReceiptNumber) {
+      setLoading(true);
+      try {
+        const response = await fetch(DONATION_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            Authorization: `Bearer ${token}`, 
+        },
+          body: JSON.stringify({ fullName, phoneNumber, amount: parseFloat(amount), mpesaReceiptNumber }),
+        });
+        const result = await response.json();
 
-    // Add the organization logo
-    doc.addImage(logo, 'PNG', 10, 10, 50, 20);
+        if (response.ok) {
+          setSuccess('Donation submitted successfully!');
+          setTimeout(() => setSuccess(""), 5000);
+          setFullName('');
+          setPhoneNumber('254');
+          setAmount('');
+          setMpesaReceiptNumber('');
+        } else {
+          setError(`Submission failed: ${result.message}`);
+          setTimeout(() => setError(""), 5000);
+        }
+      } catch (error) {
+        console.error('Error submitting donation:', error);
+        setError('An error occurred while submitting the donation.');
+        setTimeout(() => setError(""), 5000);
+      } finally{
+        setLoading(false);
+      }
+    } else {
+      alert('Please fill in all fields.');
+    }
+  };
 
-    // Add title
-    doc.setFontSize(18);
-    doc.text(`${currentMonth}, ${currentYear} Donations`, 10, 40);
+  // Handle fetching donations by date range
+  const handleFetchDonations = async () => {
+    if(!token) return;
+    if (!startDate || !endDate) {
+      alert('Please select both start and end dates.');
+      return;
+    }
+    setLoad(true);
 
-    // Add the table
-    doc.autoTable({
-      startY: 50,
-      head: [['Full Name', 'Email', 'Phone Number', 'Type', 'Amount', 'Transaction Code', 'Status', 'Date']],
-      body: donations.map(d => [d.fullName, d.email, d.phoneNumber, d.type, d.amount, d.transactionCode, d.status, d.date]),
-    });
+    try {
+      const response = await fetch(`${DONATION_URL}?startDate=${startDate}&endDate=${endDate}`, {
+        method: "GET",
+        headers:{
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}`, 
+        }
+      });
+      const data = await response.json();
 
-    doc.save(`${currentMonth}_${currentYear}_Donations.pdf`);
+      if (response.ok) {
+        setDonations(data.transactions || []);
+      } else {
+        alert(`Failed to fetch donations: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Error fetching donations:', error);
+      setError('An error occurred while fetching donations.');
+      setTimeout(() => setError(""), 5000);
+    } finally{
+      setLoad(false);
+    }
   };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">{currentMonth}, {currentYear} Donations</h1>
+      <h1 className="text-2xl flex justify-center items-center font-bold text-[#006D5B] mb-4">Donation Submission</h1>
+
+      <div className="flex flex-col gap-4 mb-8">
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          className="border p-2"
+        />
+        <input
+          type="text"
+          placeholder="Phone Number (e.g., 2547xxxxxxxx)"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          className="border p-2"
+        />
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="border p-2"
+        />
+        <input
+          type="text"
+          placeholder="Mpesa Receipt Number"
+          value={mpesaReceiptNumber}
+          onChange={(e) => setMpesaReceiptNumber(e.target.value)}
+          className="border p-2"
+        />
+        <button
+          onClick={handleSubmit}
+          className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40]"
+        >
+          {loading? "Sending..." : "Submit"}
+        </button>
+      </div>
+
+        {error && (
+          <div className="text-red-500 mt-2 text-sm text-center">{error}</div>
+        )}
+        {success && (
+          <div className="text-green-600 mt-2 text-sm text-center">{success}</div>
+        )}
+
+      <h2 className="text-xl font-bold mb-4">Fetch Donations by Date Range</h2>
+      <div className="flex gap-4 mb-4">
+        <input
+          type="date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          className="border p-2"
+        />
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="border p-2"
+        />
+        <button
+          onClick={handleFetchDonations}
+          className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40]"
+        >
+          {load? "Getting Donations..." : "Get Donations"}
+        </button>
+      </div>
+
       <table className="min-w-full bg-white border">
         <thead>
           <tr>
+            <th className="py-2 px-4 border">Transaction ID</th>
             <th className="py-2 px-4 border">Full Name</th>
-            <th className="py-2 px-4 border">Email</th>
             <th className="py-2 px-4 border">Phone Number</th>
-            <th className="py-2 px-4 border">Type</th>
             <th className="py-2 px-4 border">Amount</th>
-            <th className="py-2 px-4 border">Transaction Code</th>
-            <th className="py-2 px-4 border">Status</th>
+            <th className="py-2 px-4 border">Mpesa Receipt Number</th>
             <th className="py-2 px-4 border">Date</th>
           </tr>
         </thead>
         <tbody>
           {donations.map((donation, index) => (
             <tr key={index}>
+              <td className="py-2 px-4 border">{donation.transactionId}</td>
               <td className="py-2 px-4 border">{donation.fullName}</td>
-              <td className="py-2 px-4 border">{donation.email}</td>
               <td className="py-2 px-4 border">{donation.phoneNumber}</td>
-              <td className="py-2 px-4 border">{donation.type}</td>
               <td className="py-2 px-4 border">{donation.amount}</td>
-              <td className="py-2 px-4 border">{donation.transactionCode}</td>
-              <td className="py-2 px-4 border">{donation.status}</td>
-              <td className="py-2 px-4 border">{donation.date}</td>
+              <td className="py-2 px-4 border">{donation.mpesaReceiptNumber}</td>
+              <td className="py-2 px-4 border">{donation.createdAt}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <button
-        onClick={handleDownloadPDF}
-        className="bg-[#006D5B] text-white p-2 mt-4 rounded hover:bg-[#004d40]"
-      >
-        Download PDF
-      </button>
     </div>
   );
 };
