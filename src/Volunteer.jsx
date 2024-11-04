@@ -37,17 +37,8 @@ const Volunteer = () => {
       const result = await response.json();
 
       if (result.success) {
-        const { ciphertext, iv } = response.data.data;
-        const decryptedBytes = CryptoJS.AES.decrypt(ciphertext, CryptoJS.enc.Utf8.parse(key), {
-          iv: CryptoJS.enc.Hex.parse(iv),
-          padding: CryptoJS.pad.Pkcs7,
-          mode: CryptoJS.mode.CBC,
-        });
-        let decryptedData = decryptedBytes.toString(CryptoJS.enc.Utf8);
-        decryptedData = decryptedData.replace(/\0+$/, '');
-
-        const decryptedActivities = JSON.parse(decryptedData);
-        setActivities(decryptedActivities.length > 0 ? decryptedActivities : []);
+        
+        setActivities(result.data || []);
       } else {
         setMessage(result.message);
         setTimeout(() => setMessage(""), 5000);
