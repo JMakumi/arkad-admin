@@ -137,7 +137,7 @@ const AuthRoutes = ({ userRole, isAuthenticated }) => (
     {userRole === 'super-admin' && <Route path="/remove-user" element={<UserManagement />} />}
     
     {/* Redirect based on authentication and role */}
-    <Route path="*" element={<Navigate to={isAuthenticated ? "/signup" : "/login"} />} />
+    <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} />} />
   </Routes>
 );
 
