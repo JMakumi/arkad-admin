@@ -89,14 +89,17 @@ const Media = () => {
 
       if (result.success) {
         setSuccess(result.message);
+        setTimeout(()=> setSuccess(''), 5000);
         setDescription('');
         setImages([]);
         setCompressedSizes([]);
       } else {
         setError(result.message);
+        setTimeout(()=> setError(''), 5000);
       }
     } catch (error) {
       setError('There was an error submitting your data');
+      setTimeout(()=> setError(''), 5000);
     } finally {
       setLoading(false);
     }

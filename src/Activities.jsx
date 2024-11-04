@@ -53,7 +53,7 @@ const Activities = () => {
         setError('');
       } catch (error) {
         setError('Failed to compress the image.');
-        setTimeout(() => setError(""), 10000);
+        setTimeout(() => setError(""), 5000);
       }
     } else {
       setImage(file);
