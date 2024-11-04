@@ -133,6 +133,10 @@ const Dashboard = ({ userRole, onLogout }) => {
       </div>
 
       {/* Other Links */}
+      <Link to="/signup" className="flex items-center space-x-2 hover:text-[#FFD700]">
+        <FaHandsHelping className="text-xl" />
+        <span>Create User</span>
+      </Link>
       <Link to="/volunteer" className="flex items-center space-x-2 hover:text-[#FFD700]">
         <FaHandsHelping className="text-xl" />
         <span>Volunteer</span>
