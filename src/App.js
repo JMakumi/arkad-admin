@@ -113,7 +113,7 @@ const App = () => {
               <Route path="/contact-us" element={<ContactUs />} />
               <Route path="/change-password" element={<ChangePassword />} />
               {/* Only allow super-admin to access signup */}
-              {userRole === 'admin' && <Route path="/signup" element={<Signup />} />}
+              {userRole === 'super-admin' && <Route path="/signup" element={<Signup />} />}
               {userRole === 'super-admin' || userRole === 'admin' ? (
                 <Route path="*" element={<Navigate to="/home" />} />
               ) : (
