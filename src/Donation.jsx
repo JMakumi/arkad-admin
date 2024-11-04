@@ -23,17 +23,31 @@ const Donations = () => {
 
   // Handle submitting new donation
   const handleSubmit = async () => {
-    if(!token) return;
+    if (!token) return;
+
+    // Validate Mpesa receipt number: alphanumeric and uppercase only
+    const isAlphanumeric = /^[A-Z0-9]+$/;
+    if (!isAlphanumeric.test(mpesaReceiptNumber)) {
+      setError("Mpesa Receipt Number must be alphanumeric only.");
+      setTimeout(() => setError(""), 5000);
+      return;
+    }
+
     if (fullName && phoneNumber && amount && mpesaReceiptNumber) {
       setLoading(true);
       try {
         const response = await fetch(DONATION_URL, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json', 
-            Authorization: `Bearer ${token}`, 
-        },
-          body: JSON.stringify({ fullName, phoneNumber, amount: parseFloat(amount), mpesaReceiptNumber }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fullName,
+            phoneNumber,
+            amount: parseFloat(amount),
+            mpesaReceiptNumber: mpesaReceiptNumber.toUpperCase(), // Ensure uppercase
+          }),
         });
         const result = await response.json();
 
@@ -52,7 +66,7 @@ const Donations = () => {
         console.error('Error submitting donation:', error);
         setError('An error occurred while submitting the donation.');
         setTimeout(() => setError(""), 5000);
-      } finally{
+      } finally {
         setLoading(false);
       }
     } else {
@@ -62,7 +76,7 @@ const Donations = () => {
 
   // Handle fetching donations by date range
   const handleFetchDonations = async () => {
-    if(!token) return;
+    if (!token) return;
     if (!startDate || !endDate) {
       alert('Please select both start and end dates.');
       return;
@@ -72,9 +86,9 @@ const Donations = () => {
     try {
       const response = await fetch(`${DONATION_URL}?startDate=${startDate}&endDate=${endDate}`, {
         method: "GET",
-        headers:{
-          'Content-Type': 'application/json', 
-          Authorization: `Bearer ${token}`, 
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         }
       });
       const data = await response.json();
@@ -88,9 +102,19 @@ const Donations = () => {
       console.error('Error fetching donations:', error);
       setError('An error occurred while fetching donations.');
       setTimeout(() => setError(""), 5000);
-    } finally{
+    } finally {
       setLoad(false);
     }
+  };
+
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(date);
   };
 
   return (
@@ -123,23 +147,23 @@ const Donations = () => {
           type="text"
           placeholder="Mpesa Receipt Number"
           value={mpesaReceiptNumber}
-          onChange={(e) => setMpesaReceiptNumber(e.target.value)}
+          onChange={(e) => setMpesaReceiptNumber(e.target.value.toUpperCase())} // Convert to uppercase as user types
           className="border p-2"
         />
         <button
           onClick={handleSubmit}
           className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40]"
         >
-          {loading? "Sending..." : "Submit"}
+          {loading ? "Sending..." : "Submit"}
         </button>
       </div>
 
-        {error && (
-          <div className="text-red-500 mt-2 text-sm text-center">{error}</div>
-        )}
-        {success && (
-          <div className="text-green-600 mt-2 text-sm text-center">{success}</div>
-        )}
+      {error && (
+        <div className="text-red-500 mt-2 text-sm text-center">{error}</div>
+      )}
+      {success && (
+        <div className="text-green-600 mt-2 text-sm text-center">{success}</div>
+      )}
 
       <h2 className="text-xl font-bold mb-4">Fetch Donations by Date Range</h2>
       <div className="flex gap-4 mb-4">
@@ -159,7 +183,7 @@ const Donations = () => {
           onClick={handleFetchDonations}
           className="bg-[#006D5B] text-white p-2 rounded hover:bg-[#004d40]"
         >
-          {load? "Getting Donations..." : "Get Donations"}
+          {load ? "Getting Donations..." : "Get Donations"}
         </button>
       </div>
 
@@ -182,7 +206,7 @@ const Donations = () => {
               <td className="py-2 px-4 border">{donation.phoneNumber}</td>
               <td className="py-2 px-4 border">{donation.amount}</td>
               <td className="py-2 px-4 border">{donation.mpesaReceiptNumber}</td>
-              <td className="py-2 px-4 border">{donation.createdAt}</td>
+              <td className="py-2 px-4 border">{formatDate(donation.createdAt)}</td>
             </tr>
           ))}
         </tbody>
