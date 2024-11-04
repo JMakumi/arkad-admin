@@ -13,6 +13,7 @@ const Dashboard = ({ userRole, onLogout }) => {
   const [membershipOpen, setMembershipOpen] = useState(false);
   const [leadershipOpen, setLeadershipOpen] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [role, setRole] = useState(null);
 
   const toggleDropdown = (setDropdownState, dropdownState) => {
     setDropdownState(!dropdownState);
@@ -22,6 +23,7 @@ const Dashboard = ({ userRole, onLogout }) => {
     const storedUserData = JSON.parse(localStorage.getItem('userData'));
     if (storedUserData) {
       setUserData(storedUserData.name);
+      setRole(storedUserData.role)
     }
   }, []);
 
@@ -130,7 +132,7 @@ const Dashboard = ({ userRole, onLogout }) => {
       </div>
 
       {/* Other Links */}
-      {userRole === 'super-admin' && (
+      {role === 'super-admin' && (
         <Link to="/signup" className="flex items-center space-x-2 hover:text-[#FFD700]">
           <FaHandsHelping className="text-xl" />
           <span>Create User</span>
