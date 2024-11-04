@@ -25,15 +25,17 @@ import Dashboard from './Dashboard';
 import UserManagement from './Users';
 import './App.css';
 
-
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [isInactive, setIsInactive] = useState(false);
   const navigate = useNavigate();
 
-  // Function to handle login and immediately update access control
+  // Timeout duration in milliseconds (60 seconds)
+  const INACTIVITY_LIMIT = 60000;
+  let inactivityTimer;
+
+  // Function to handle login and update access control immediately
   const handleLogin = useCallback((role, data) => {
     setIsAuthenticated(true);
     setUserRole(role);
@@ -49,6 +51,26 @@ const App = () => {
     localStorage.removeItem('userData');
     navigate('/login');
   }, [navigate]);
+
+  // Set up and clear inactivity timer on user events
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      handleLogout(); // Auto-logout after inactivity limit
+    }, INACTIVITY_LIMIT);
+  }, [handleLogout]);
+
+  // Track user activity and reset inactivity timer
+  useEffect(() => {
+    const events = ['click', 'mousemove', 'keypress'];
+    events.forEach(event => window.addEventListener(event, resetInactivityTimer));
+    resetInactivityTimer(); // Start timer initially
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, resetInactivityTimer));
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+    };
+  }, [resetInactivityTimer]);
 
   // Update states if access token is already available in local storage on page load
   useEffect(() => {
@@ -74,7 +96,6 @@ const App = () => {
             <header className="flex justify-between items-center mb-4">
               <h1 className="text-2xl">Welcome to the Dashboard</h1>
             </header>
-            {/* Pass userRole and isAuthenticated to the Routes component */}
             <AuthRoutes userRole={userRole} isAuthenticated={isAuthenticated} />
           </main>
         </div>
@@ -116,9 +137,8 @@ const AuthRoutes = ({ userRole, isAuthenticated }) => (
     {userRole === 'super-admin' && <Route path="/remove-user" element={<UserManagement />} />}
     
     {/* Redirect based on authentication and role */}
-    <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} />} />
+    <Route path="*" element={<Navigate to={isAuthenticated ? "/signup" : "/login"} />} />
   </Routes>
 );
 
 export default App;
-
