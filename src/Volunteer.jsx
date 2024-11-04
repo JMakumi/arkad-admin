@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import logo from './images/logo.png';
-import CryptoJS from 'crypto-js';
 import "./modal.css";
 
 const VOLUNTEER_URL = "https://arkad-server.onrender.com/users/volunteer";
-const key = process.env.REACT_APP_SECRET_KEY;
 
 const Volunteer = () => {
   const [activities, setActivities] = useState([]);  // Store the activity and volunteer data
@@ -25,7 +23,7 @@ const Volunteer = () => {
   }, []);
 
   const fetchData = async () => {
-    if (!token || !key) return;
+    if (!token) return;
     setLoading(true);  // Set loading to true when data is being fetched
     try {
       const response = await fetch(VOLUNTEER_URL, {
