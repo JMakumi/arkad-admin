@@ -53,7 +53,7 @@ const Login = ({ onLogin }) => {
         onLogin();
         navigate('/working');
         const decodedToken = jwtDecode(result.accessToken);
-        console.log("Token: ", decodedToken);
+        console.log("Token: ", result.accessToken);
         const userDetails = {
             id: decodedToken.id,
             username: decodedToken.username,
