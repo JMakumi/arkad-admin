@@ -101,7 +101,7 @@ const Login = ({ onLogin }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border rounded focus:outline-none focus:border-[#006D5B] transition duration-200"
-              placeholder="password123"
+              placeholder="type your password"
               required
             />
           </div>
